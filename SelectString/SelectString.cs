@@ -47,17 +47,25 @@ namespace SelectString
                 var addonSelectStringPtr = Svc.GameGui.GetAddonByName("SelectString", 1);
                 if (addonSelectStringPtr != IntPtr.Zero)
                 {
+                    if (Svc.GameGui.GetAddonByName("HousingMenu", 1) != IntPtr.Zero) return;
                     var addonSelectString = (AddonSelectString*)addonSelectStringPtr;
                     var addonSelectStringBase = (AtkUnitBase*)addonSelectStringPtr;
                     //Svc.Chat.Print($"{addonSelectStringBase->X * addonSelectStringBase->Scale}, {addonSelectStringBase->Y * addonSelectStringBase->Scale}");
+                    if (addonSelectStringBase->UldManager.NodeListCount < 3) return;
                     var listNode = addonSelectStringBase->UldManager.NodeList[2];
                     //Svc.Chat.Print($"{listNode->X}, {listNode->Y}");
-                    for (var i = 0; i < Math.Min(addonSelectString->PopupMenu.EntryCount, 9); i++)
+                    for (var i = 0; i < Math.Min(addonSelectString->PopupMenu.EntryCount, 10); i++)
                     {
-                        var state = Svc.KeyState.GetRawValue(49 + i);
+                        var state = Svc.KeyState.GetRawValue(49 + (i == 9 ? -1 : i));
                         if (state == 3)
                         {
-                            Svc.KeyState.SetRawValue(49 + i, 0);
+                            Svc.KeyState.SetRawValue(49 + (i == 9 ? -1 : i), 0);
+                            clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                        }
+                        state = Svc.KeyState.GetRawValue(97 + (i == 9 ? -1 : i));
+                        if (state == 3)
+                        {
+                            Svc.KeyState.SetRawValue(97 + (i == 9 ? -1 : i), 0);
                             clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
                         }
                         //Svc.Chat.Print(Marshal.PtrToStringUTF8((IntPtr)addonSelectString->PopupMenu.EntryNames[i]));
@@ -66,7 +74,7 @@ namespace SelectString
                         DrawList.Add((
                             addonSelectStringBase->X + (listNode->X + itemNode->X) * addonSelectStringBase->Scale,
                             addonSelectStringBase->Y + (listNode->Y + itemNode->Y + itemNode->Height / 2) * addonSelectStringBase->Scale,
-                            $"{i + 1}"
+                            $"{(i==9?0:i+1)}"
                             ));
                     }
                 }
@@ -83,7 +91,7 @@ namespace SelectString
             {
                 ImGuiHelpers.ForceNextWindowMainViewport();
                 var textSize = ImGui.CalcTextSize(e.Text);
-                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(e.X - textSize.X, e.Y - textSize.Y / 2f));
+                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(e.X - textSize.X - 2, e.Y - textSize.Y / 2f));
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(2f, 0f));
                 ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0f, 0f));
                 ImGui.Begin("##selectstring" + e.Text, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoScrollbar
