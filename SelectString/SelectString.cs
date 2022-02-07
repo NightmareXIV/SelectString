@@ -54,7 +54,7 @@ namespace SelectString
                     if (addonSelectStringBase->UldManager.NodeListCount < 3) return;
                     var listNode = addonSelectStringBase->UldManager.NodeList[2];
                     //Svc.Chat.Print($"{listNode->X}, {listNode->Y}");
-                    for (var i = 0; i < Math.Min(addonSelectString->PopupMenu.EntryCount, 10); i++)
+                    for (ushort i = 0; i < Math.Min(addonSelectString->PopupMenu.PopupMenu.EntryCount, 10); i++)
                     {
                         var state = Svc.KeyState.GetRawValue(49 + (i == 9 ? -1 : i));
                         if (state == 3)
