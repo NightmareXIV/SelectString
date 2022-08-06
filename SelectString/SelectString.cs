@@ -54,27 +54,40 @@ namespace SelectString
                     if (addonSelectStringBase->UldManager.NodeListCount < 3) return;
                     var listNode = addonSelectStringBase->UldManager.NodeList[2];
                     //Svc.Chat.Print($"{listNode->X}, {listNode->Y}");
-                    for (ushort i = 0; i < Math.Min(addonSelectString->PopupMenu.PopupMenu.EntryCount, 10); i++)
+                    for (ushort i = 0; i < Math.Min(addonSelectString->PopupMenu.PopupMenu.EntryCount, 12); i++)
                     {
-                        var state = Svc.KeyState.GetRawValue(49 + (i == 9 ? -1 : i));
-                        if (state == 3)
+                        if (i < 10)
                         {
-                            Svc.KeyState.SetRawValue(49 + (i == 9 ? -1 : i), 0);
-                            clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                            var state = Svc.KeyState.GetRawValue(49 + (i == 9 ? -1 : i));
+                            if (state == 3)
+                            {
+                                Svc.KeyState.SetRawValue(49 + (i == 9 ? -1 : i), 0);
+                                clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                            }
+                            state = Svc.KeyState.GetRawValue(97 + (i == 9 ? -1 : i));
+                            if (state == 3)
+                            {
+                                Svc.KeyState.SetRawValue(97 + (i == 9 ? -1 : i), 0);
+                                clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                            }
                         }
-                        state = Svc.KeyState.GetRawValue(97 + (i == 9 ? -1 : i));
-                        if (state == 3)
+                        else
                         {
-                            Svc.KeyState.SetRawValue(97 + (i == 9 ? -1 : i), 0);
-                            clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                            var state = Svc.KeyState.GetRawValue(189 + (i == 10 ? 0 : -2));
+                            if (state == 3)
+                            {
+                                Svc.KeyState.SetRawValue(189 + (i == 10 ? 0 : -2), 0);
+                                clickMgr.ClickItemThrottled((IntPtr)addonSelectString, i, ((AtkTextNode*)(addonSelectStringBase->UldManager.NodeList[3]))->NodeText.ToString());
+                            }
                         }
+
                         //Svc.Chat.Print(Marshal.PtrToStringUTF8((IntPtr)addonSelectString->PopupMenu.EntryNames[i]));
                         var itemNode = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
                         //Svc.Chat.Print($"{itemNode->X}, {itemNode->Y}");
                         DrawList.Add((
                             addonSelectStringBase->X + (listNode->X + itemNode->X) * addonSelectStringBase->Scale,
                             addonSelectStringBase->Y + (listNode->Y + itemNode->Y + itemNode->Height / 2) * addonSelectStringBase->Scale,
-                            $"{(i==9?0:i+1)}"
+                            $"{(i==11?"=":(i==10?"-":(i==9?0:i+1)))}"
                             ));
                     }
                 }
