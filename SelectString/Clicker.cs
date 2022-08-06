@@ -1,5 +1,6 @@
 ﻿using ClickLib;
 using ClickLib.Clicks;
+using ClickLib.Enums;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
