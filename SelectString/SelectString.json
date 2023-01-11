@@ -1,11 +1,12 @@
 ﻿{
   "Name": "SelectString",
-  "Author": "Eternita",
+  "Author": "NightmareXIV",
   "Punchline": "Select items in menus via 0-9 keys rather than mouse.",
   "Description": "Numpad is also supported. Note: some menus, like World Visit, are not supported, and whether they will be in future or not remains a question.",
-  "RepoUrl": "https://github.com/Eternita-S/SelectString",
-  "DalamudApiLevel": 7,
+  "RepoUrl": "https://github.com/NightmareXIV/SelectString",
+  "DalamudApiLevel": 8,
   "LoadPriority": 0,
   "InternalName": "SelectString",
-  "ApplicableVersion": "any"
+  "ApplicableVersion": "any",
+  "AssemblyVersion": "9.0.0.0"
 }
