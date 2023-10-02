@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SelectString", "SelectStrin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClickLib", "ClickLib\ClickLib\ClickLib.csproj", "{24518BF4-A308-4DD6-9E57-C76A8D02072A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ECommons", "ECommons\ECommons\ECommons.csproj", "{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{24518BF4-A308-4DD6-9E57-C76A8D02072A}.Release|Any CPU.Build.0 = Release|x64
 		{24518BF4-A308-4DD6-9E57-C76A8D02072A}.Release|x64.ActiveCfg = Release|x64
 		{24518BF4-A308-4DD6-9E57-C76A8D02072A}.Release|x64.Build.0 = Release|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Debug|Any CPU.Build.0 = Debug|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Debug|x64.ActiveCfg = Debug|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Debug|x64.Build.0 = Debug|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Release|Any CPU.ActiveCfg = Release|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Release|Any CPU.Build.0 = Release|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Release|x64.ActiveCfg = Release|x64
+		{703C86AC-CFBA-4FF0-BC24-1294EFE79EDB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

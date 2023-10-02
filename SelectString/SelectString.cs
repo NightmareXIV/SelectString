@@ -11,6 +11,10 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using Dalamud.Interface;
 using System.Numerics;
+using System.Diagnostics.Tracing;
+using ECommons;
+using ECommons.DalamudServices;
+using Dalamud.Interface.Utility;
 
 namespace SelectString
 {
@@ -23,7 +27,7 @@ namespace SelectString
 
         public SelectString(DalamudPluginInterface pluginInterface)
         {
-            pluginInterface.Create<Svc>();
+            ECommonsMain.Init(pluginInterface, this);
             clickMgr = new Clicker();
             Svc.Framework.Update += Tick;
             Svc.PluginInterface.UiBuilder.Draw += Draw;
@@ -35,9 +39,10 @@ namespace SelectString
             Svc.Framework.Update -= Tick;
             Svc.PluginInterface.UiBuilder.Draw -= Draw;
             Svc.Commands.RemoveHandler("/ss");
+            ECommonsMain.Dispose();
         }
 
-        private void Tick(Framework framework)
+        private void Tick(object framework)
         {
             /*if (!exec) return;
             exec = false;*/

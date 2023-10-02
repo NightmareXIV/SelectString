@@ -1,3 +1,6 @@
 [submodule "ClickLib"]
 	path = ClickLib
 	url = https://github.com/Eternita-S/ClickLib
+[submodule "ECommons"]
+	path = ECommons
+	url = https://github.com/NightmareXIV/ECommons
