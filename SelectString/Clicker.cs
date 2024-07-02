@@ -8,7 +8,7 @@ namespace SelectString
 {
     unsafe class Clicker
     {
-        private readonly Dictionary<string, long> ThrottleTimes = [];
+        Dictionary<string, long> ThrottleTimes = [];
         delegate void ReceiveEventDelegate(IntPtr addon, EventType evt, uint a3, IntPtr a4, IntPtr a5);
 
         internal void ClickItemThrottled(IntPtr addonPtr, ushort index, string identifier)
