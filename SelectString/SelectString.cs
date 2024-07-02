@@ -1,6 +1,5 @@
 ﻿using Dalamud.Game.Command;
 using Dalamud.Interface.Utility;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin;
 using ECommons;
 using ECommons.DalamudServices;
@@ -16,9 +15,9 @@ namespace SelectString
     public unsafe class SelectString : IDalamudPlugin
     {
         public string Name => "SelectString";
-        private bool exec = false;
-        private readonly List<(float X, float Y, string Text)> DrawList = [];
-        private readonly Clicker clickMgr;
+        bool exec = false;
+        List<(float X, float Y, string Text)> DrawList = new();
+        Clicker clickMgr;
 
         public SelectString(IDalamudPluginInterface pluginInterface)
         {
@@ -100,18 +99,19 @@ namespace SelectString
 
         private void Draw()
         {
-            foreach (var (X, Y, Text) in DrawList)
+            foreach (var e in DrawList)
             {
                 ImGuiHelpers.ForceNextWindowMainViewport();
-                var textSize = ImGui.CalcTextSize(Text);
-                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(X - textSize.X - 2, Y - textSize.Y / 2f));
-                using var padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(2f, 0f));
-                using var size = ImRaii.PushStyle(ImGuiStyleVar.WindowMinSize, new Vector2(0f, 0f));
-                ImGui.Begin("##selectstring" + Text, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoScrollbar
+                var textSize = ImGui.CalcTextSize(e.Text);
+                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(e.X - textSize.X - 2, e.Y - textSize.Y / 2f));
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(2f, 0f));
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0f, 0f));
+                ImGui.Begin("##selectstring" + e.Text, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoScrollbar
                     | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavFocus
                     | ImGuiWindowFlags.AlwaysUseWindowPadding | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoSavedSettings);
-                ImGui.TextUnformatted(Text);
+                ImGui.TextUnformatted(e.Text);
                 ImGui.End();
+                ImGui.PopStyleVar(2);
             }
         }
     }
