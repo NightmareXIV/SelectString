@@ -1,20 +1,14 @@
-﻿using Dalamud.Game;
-using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.Command;
+﻿using Dalamud.Game.Command;
+using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Linq;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
-using Dalamud.Interface;
-using System.Numerics;
-using System.Diagnostics.Tracing;
 using ECommons;
 using ECommons.DalamudServices;
-using Dalamud.Interface.Utility;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace SelectString
 {
@@ -25,7 +19,7 @@ namespace SelectString
         List<(float X, float Y, string Text)> DrawList = new();
         Clicker clickMgr;
 
-        public SelectString(DalamudPluginInterface pluginInterface)
+        public SelectString(IDalamudPluginInterface pluginInterface)
         {
             ECommonsMain.Init(pluginInterface, this);
             clickMgr = new Clicker();
@@ -92,12 +86,12 @@ namespace SelectString
                         DrawList.Add((
                             addonSelectStringBase->X + (listNode->X + itemNode->X) * addonSelectStringBase->Scale,
                             addonSelectStringBase->Y + (listNode->Y + itemNode->Y + itemNode->Height / 2) * addonSelectStringBase->Scale,
-                            $"{(i==11?"=":(i==10?"-":(i==9?0:i+1)))}"
+                            $"{(i == 11 ? "=" : (i == 10 ? "-" : (i == 9 ? 0 : i + 1)))}"
                             ));
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Svc.Chat.Print(e.Message + "\n" + e.StackTrace);
             }
@@ -105,7 +99,7 @@ namespace SelectString
 
         private void Draw()
         {
-            foreach(var e in DrawList)
+            foreach (var e in DrawList)
             {
                 ImGuiHelpers.ForceNextWindowMainViewport();
                 var textSize = ImGui.CalcTextSize(e.Text);
