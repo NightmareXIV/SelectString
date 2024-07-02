@@ -1,31 +1,26 @@
-﻿using Dalamud.Game;
-using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.Command;
+﻿using Dalamud.Game.Command;
+using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Linq;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
-using Dalamud.Interface;
-using System.Numerics;
-using System.Diagnostics.Tracing;
 using ECommons;
 using ECommons.DalamudServices;
-using Dalamud.Interface.Utility;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace SelectString
 {
     public unsafe class SelectString : IDalamudPlugin
     {
         public string Name => "SelectString";
-        bool exec = false;
-        List<(float X, float Y, string Text)> DrawList = new();
-        Clicker clickMgr;
+        private bool exec = false;
+        private readonly List<(float X, float Y, string Text)> DrawList = [];
+        private readonly Clicker clickMgr;
 
-        public SelectString(DalamudPluginInterface pluginInterface)
+        public SelectString(IDalamudPluginInterface pluginInterface)
         {
             ECommonsMain.Init(pluginInterface, this);
             clickMgr = new Clicker();
@@ -92,12 +87,12 @@ namespace SelectString
                         DrawList.Add((
                             addonSelectStringBase->X + (listNode->X + itemNode->X) * addonSelectStringBase->Scale,
                             addonSelectStringBase->Y + (listNode->Y + itemNode->Y + itemNode->Height / 2) * addonSelectStringBase->Scale,
-                            $"{(i==11?"=":(i==10?"-":(i==9?0:i+1)))}"
+                            $"{(i == 11 ? "=" : (i == 10 ? "-" : (i == 9 ? 0 : i + 1)))}"
                             ));
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Svc.Chat.Print(e.Message + "\n" + e.StackTrace);
             }
@@ -105,19 +100,18 @@ namespace SelectString
 
         private void Draw()
         {
-            foreach(var e in DrawList)
+            foreach (var (X, Y, Text) in DrawList)
             {
                 ImGuiHelpers.ForceNextWindowMainViewport();
-                var textSize = ImGui.CalcTextSize(e.Text);
-                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(e.X - textSize.X - 2, e.Y - textSize.Y / 2f));
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(2f, 0f));
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, new Vector2(0f, 0f));
-                ImGui.Begin("##selectstring" + e.Text, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoScrollbar
+                var textSize = ImGui.CalcTextSize(Text);
+                ImGuiHelpers.SetNextWindowPosRelativeMainViewport(new Vector2(X - textSize.X - 2, Y - textSize.Y / 2f));
+                using var padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(2f, 0f));
+                using var size = ImRaii.PushStyle(ImGuiStyleVar.WindowMinSize, new Vector2(0f, 0f));
+                ImGui.Begin("##selectstring" + Text, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoScrollbar
                     | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavFocus
                     | ImGuiWindowFlags.AlwaysUseWindowPadding | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoSavedSettings);
-                ImGui.TextUnformatted(e.Text);
+                ImGui.TextUnformatted(Text);
                 ImGui.End();
-                ImGui.PopStyleVar(2);
             }
         }
     }
