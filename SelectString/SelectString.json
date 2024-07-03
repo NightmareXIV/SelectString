@@ -6,5 +6,6 @@
   "RepoUrl": "https://github.com/NightmareXIV/SelectString",
   "LoadPriority": 0,
   "InternalName": "SelectString",
-  "ApplicableVersion": "any"
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 10
 }
