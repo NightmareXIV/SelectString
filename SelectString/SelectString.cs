@@ -59,6 +59,8 @@ namespace SelectString
                     DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
                 if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && GenericHelpers.IsAddonReady(cc))
                     DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
+                if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && GenericHelpers.IsAddonReady(ds))
+                    DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
             }
             catch (Exception e)
             {
