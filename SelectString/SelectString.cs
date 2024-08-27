@@ -111,7 +111,7 @@ namespace SelectString
             {
                 CheckKeyState(i, () => clickMgr.ClickItemThrottled(() => am.Entries[i].Select(), textNode->NodeText.ToString()));
                 var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
-                var itemText = listComponent->GetComponent()->UldManager.NodeList[3]->GetAsAtkTextNode()->AtkResNode;
+                var itemText = listComponent->GetComponent()->UldManager.NodeList[4]->GetAsAtkTextNode()->AtkResNode;
                 DrawKey(i, &itemText);
             }
         }
