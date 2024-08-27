@@ -2,6 +2,7 @@
 using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
 using ECommons;
+using ECommons.Automation;
 using ECommons.DalamudServices;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -54,6 +55,10 @@ namespace SelectString
                     DrawEntries(yn);
                 if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectOk>(out var ok) && ok.IsAddonReady)
                     DrawEntries(ok);
+                if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && GenericHelpers.IsAddonReady(fl))
+                    DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
+                if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && GenericHelpers.IsAddonReady(cc))
+                    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
             }
             catch (Exception e)
             {
@@ -129,18 +134,36 @@ namespace SelectString
 
         private void DrawEntries(AddonMaster.SelectYesno am)
         {
-            CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Yes(), am.Text + "Yes"));
-            DrawKey(0, am.Addon->YesButton->UldManager.NodeList[0]);
-            CheckKeyState(1, () => clickMgr.ClickItemThrottled(() => am.No(), am.Text + "No"));
-            DrawKey(1, am.Addon->NoButton->UldManager.NodeList[0]);
+            if (am.Addon->YesButton->IsEnabled)
+            {
+                CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Yes(), am.Text + "Yes"));
+                DrawKey(0, am.Addon->YesButton->UldManager.NodeList[0]);
+            }
+            if (am.Addon->NoButton->IsEnabled)
+            {
+                CheckKeyState(1, () => clickMgr.ClickItemThrottled(() => am.No(), am.Text + "No"));
+                DrawKey(1, am.Addon->NoButton->UldManager.NodeList[0]);
+            }
             // TODO: there's a third button sometimes (usually a wait)
         }
 
         private void DrawEntries(AddonMaster.SelectOk am)
         {
-            CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Ok(), am.Text + "Ok"));
-            DrawKey(0, am.Addon->OkButton->AtkResNode);
+            if (am.Addon->OkButton->IsEnabled)
+            {
+                CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Ok(), am.Text + "Ok"));
+                DrawKey(0, am.Addon->OkButton->AtkResNode);
+            }
             // TODO: there's a second button sometimes (usually a cancel)
+        }
+
+        private void DrawEntries(AtkUnitBase* atk, AtkComponentButton* button, params object[] callback)
+        {
+            if (button->IsEnabled)
+            {
+                CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => Callback.Fire(atk, true, callback), button->ButtonTextNode->NodeText.ToString()));
+                DrawKey(0, button->AtkResNode);
+            }
         }
 
         private static void CheckKeyState(ushort i, Action clickAction)
