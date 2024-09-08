@@ -47,29 +47,29 @@ namespace SelectString
             {
                 if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectString>(out var ss) && ss.IsAddonReady && ss.IsAddonHighestFocus)
                     DrawEntries(ss);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectIconString>(out var sis) && sis.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectIconString>(out var sis) && sis.IsAddonReady && sis.IsAddonHighestFocus)
                     DrawEntries(sis);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.ContextMenu>(out var cm) && cm.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.ContextMenu>(out var cm) && cm.IsAddonReady && cm.IsAddonHighestFocus)
                     DrawEntries(cm);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectYesno>(out var yn) && yn.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectYesno>(out var yn) && yn.IsAddonReady && yn.IsAddonHighestFocus)
                     DrawEntries(yn);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectOk>(out var ok) && ok.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.SelectOk>(out var ok) && ok.IsAddonReady && ok.IsAddonHighestFocus)
                     DrawEntries(ok);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.JournalDetail>(out var jd) && jd.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.JournalDetail>(out var jd) && jd.IsAddonReady && jd.IsAddonHighestFocus)
                     DrawEntries(jd);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.DifficultySelectYesNo>(out var dyn) && dyn.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.DifficultySelectYesNo>(out var dyn) && dyn.IsAddonReady && dyn.IsAddonHighestFocus)
                     DrawEntries(dyn);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.Request>(out var rq) && rq.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.Request>(out var rq) && rq.IsAddonReady && rq.IsAddonHighestFocus)
                     DrawEntries(rq);
                 if (GenericHelpers.TryGetAddonMaster<AddonMaster.LookingForGroup>(out var lfg) && lfg.IsAddonReady && lfg.IsAddonHighestFocus)
                     DrawEntries(lfg);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.LookingForGroupCondition>(out var lfgc) && lfgc.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.LookingForGroupCondition>(out var lfgc) && lfgc.IsAddonReady && lfgc.IsAddonHighestFocus)
                     DrawEntries(lfgc);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.AirShipExplorationResult>(out var aser) && aser.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.AirShipExplorationResult>(out var aser) && aser.IsAddonReady && aser.IsAddonHighestFocus)
                     DrawEntries(aser);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.CompanyCraftSupply>(out var ccs) && ccs.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.CompanyCraftSupply>(out var ccs) && ccs.IsAddonReady && ccs.IsAddonHighestFocus)
                     DrawEntries(ccs);
-                if (GenericHelpers.TryGetAddonMaster<AddonMaster.CollectablesShop>(out var cs) && cs.IsAddonReady && ss.IsAddonHighestFocus)
+                if (GenericHelpers.TryGetAddonMaster<AddonMaster.CollectablesShop>(out var cs) && cs.IsAddonReady && cs.IsAddonHighestFocus)
                     DrawEntries(cs);
 
                 if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && GenericHelpers.IsAddonReady(fl))
