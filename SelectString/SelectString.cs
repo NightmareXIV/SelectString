@@ -4,9 +4,11 @@ using Dalamud.Plugin;
 using ECommons;
 using ECommons.Automation;
 using ECommons.DalamudServices;
+using ECommons.Singletons;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
+using SelectString.Services;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -28,6 +30,7 @@ namespace SelectString
             Svc.Framework.Update += Tick;
             Svc.PluginInterface.UiBuilder.Draw += Draw;
             Svc.Commands.AddHandler("/ss", new CommandInfo(delegate { exec ^= true; }));
+            SingletonServiceManager.Initialize(typeof(ServiceManager));
         }
 
         public void Dispose()
