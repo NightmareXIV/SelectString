@@ -115,106 +115,106 @@ namespace SelectString
                 //    DrawEntries(gcp);
 
                 // generic button addons
-                if (TryGetAddonMaster<AirShipExploration>(out var ase))
+                if (TryGetAddonMasterIfFocused<AirShipExploration>(atk, out var ase))
                     DrawEntries(ase.DeployButton);
-                if (TryGetAddonMaster<AirShipExplorationResult>(out var aser))
+                if (TryGetAddonMasterIfFocused<AirShipExplorationResult>(atk, out var aser))
                     DrawEntries([aser.RedeployButton, aser.FinalizeReportButton]);
-                if (TryGetAddonMaster<CollectablesShop>(out var cs))
+                if (TryGetAddonMasterIfFocused<CollectablesShop>(atk, out var cs))
                     DrawEntries(cs.TradeButton);
-                if (TryGetAddonMaster<CompanyCraftRecipeNoteBook>(out var ccrn))
+                if (TryGetAddonMasterIfFocused<CompanyCraftRecipeNoteBook>(atk, out var ccrn))
                     DrawEntries(ccrn.BeginButton);
-                if (TryGetAddonMaster<CompanyCraftSupply>(out var ccs))
+                if (TryGetAddonMasterIfFocused<CompanyCraftSupply>(atk, out var ccs))
                     DrawEntries(ccs.CloseButton);
-                if (TryGetAddonMaster<DifficultySelectYesNo>(out var dyn))
+                if (TryGetAddonMasterIfFocused<DifficultySelectYesNo>(atk, out var dyn))
                     DrawEntries([dyn.ProceedButton, dyn.LeaveButton]); // TODO: the radio buttons
-                if (TryGetAddonMaster<GcArmyChangeClass>(out var gcac))
+                if (TryGetAddonMasterIfFocused<GcArmyChangeClass>(atk, out var gcac))
                     DrawEntries([gcac.GladiatorButton, gcac.MarauderButton, gcac.PugilistButton, gcac.LancerButton, gcac.RogueButton, gcac.ArcherButton, gcac.ConjurerButton, gcac.ThaumaturgeButton, gcac.ArcanistButton]);
-                if (TryGetAddonMaster<GcArmyExpedition>(out var gae))
+                if (TryGetAddonMasterIfFocused<GcArmyExpedition>(atk, out var gae))
                     DrawEntries(gae.Addon->DeployButton);
-                if (TryGetAddonMaster<GcArmyExpeditionResult>(out var gaer))
+                if (TryGetAddonMasterIfFocused<GcArmyExpeditionResult>(atk, out var gaer))
                     DrawEntries(gaer.Addon->CompleteButton);
-                if (TryGetAddonMaster<GcArmyTraining>(out var gat))
+                if (TryGetAddonMasterIfFocused<GcArmyTraining>(atk, out var gat))
                     DrawEntries(gat.CloseButton);
-                if (TryGetAddonMaster<GearSetList>(out var gsl))
+                if (TryGetAddonMasterIfFocused<GearSetList>(atk, out var gsl))
                     DrawEntries(gsl.EquipSetButton);
-                if (TryGetAddonMaster<ItemInspectionResult>(out var iir))
+                if (TryGetAddonMasterIfFocused<ItemInspectionResult>(atk, out var iir))
                     DrawEntries([iir.NextButton, iir.CloseButton]);
-                if (TryGetAddonMaster<JournalResult>(out var jr))
+                if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
                     DrawEntries([jr.Addon->CompleteButton, jr.Addon->DeclineButton]);
-                if (TryGetAddonMaster<LetterList>(out var ll))
+                if (TryGetAddonMasterIfFocused<LetterList>(atk, out var ll))
                     DrawEntries([ll.NewButton, ll.SentLetterHistoryButton, ll.DeliveryRequestButton]);
-                if (TryGetAddonMaster<LetterViewer>(out var lv))
+                if (TryGetAddonMasterIfFocused<LetterViewer>(atk, out var lv))
                     DrawEntries([lv.TakeAllButton, lv.ReplyButton, lv.DeleteButton]);
-                if (TryGetAddonMaster<LookingForGroup>(out var lfg))
+                if (TryGetAddonMasterIfFocused<LookingForGroup>(atk, out var lfg))
                     DrawEntries(lfg.RecruitMembersButton);
-                if (TryGetAddonMaster<LookingForGroupCondition>(out var lfgc))
+                if (TryGetAddonMasterIfFocused<LookingForGroupCondition>(atk, out var lfgc))
                     DrawEntries([lfgc.RecruitButton, lfgc.CancelButton, lfgc.ResetButton]);
-                if (TryGetAddonMaster<LookingForGroupDetail>(out var lfgd))
+                if (TryGetAddonMasterIfFocused<LookingForGroupDetail>(atk, out var lfgd))
                     DrawEntries([lfgd.JoinEditButton, lfgd.TellEndButton, lfgd.BackButton]);
-                if (TryGetAddonMaster<LookingForGroupPrivate>(out var lfgp))
+                if (TryGetAddonMasterIfFocused<LookingForGroupPrivate>(atk, out var lfgp))
                     DrawEntries([lfgp.JoinButton, lfgp.CancelButton]);
-                if (TryGetAddonMaster<LotteryWeeklyInput>(out var lwi))
+                if (TryGetAddonMasterIfFocused<LotteryWeeklyInput>(atk, out var lwi))
                     DrawEntries([lwi.PurchaseButton, lwi.RandomButton]);
-                if (TryGetAddonMaster<LotteryWeeklyRewardList>(out var lwrl))
+                if (TryGetAddonMasterIfFocused<LotteryWeeklyRewardList>(atk, out var lwrl))
                     DrawEntries(lwrl.CloseButton);
-                if (TryGetAddonMaster<MateriaAttachDialog>(out var mad))
+                if (TryGetAddonMasterIfFocused<MateriaAttachDialog>(atk, out var mad))
                     DrawEntries([mad.MeldButton, mad.ReturnButton]);
-                if (TryGetAddonMaster<MaterializeDialog>(out var md))
+                if (TryGetAddonMasterIfFocused<MaterializeDialog>(atk, out var md))
                     DrawEntries([md.Addon->YesButton, md.Addon->NoButton]);
-                if (TryGetAddonMaster<MateriaRetrieveDialog>(out var mrd))
+                if (TryGetAddonMasterIfFocused<MateriaRetrieveDialog>(atk, out var mrd))
                     DrawEntries([mrd.BeginButton, mrd.ReturnButton]);
-                if (TryGetAddonMaster<MiragePrismExecute>(out var mpe))
+                if (TryGetAddonMasterIfFocused<MiragePrismExecute>(atk, out var mpe))
                     DrawEntries([mpe.CastButton, mpe.ReturnButton]);
-                if (TryGetAddonMaster<MiragePrismRemove>(out var mpr))
+                if (TryGetAddonMasterIfFocused<MiragePrismRemove>(atk, out var mpr))
                     DrawEntries([mpr.DispelButton, mpr.ReturnButton]);
-                if (TryGetAddonMaster<PurifyAutoDialog>(out var pad))
+                if (TryGetAddonMasterIfFocused<PurifyAutoDialog>(atk, out var pad))
                     DrawEntries(pad.CancelExitButton);
-                if (TryGetAddonMaster<PurifyResult>(out var pr))
+                if (TryGetAddonMasterIfFocused<PurifyResult>(atk, out var pr))
                     DrawEntries([pr.AutomaticButton, pr.CloseButton]);
-                if (TryGetAddonMaster<RecipeNote>(out var rn))
+                if (TryGetAddonMasterIfFocused<RecipeNote>(atk, out var rn))
                     DrawEntries([rn.Addon->SynthesizeButton, rn.Addon->QuickSynthesisButton, rn.Addon->TrialSynthesisButton]);
-                if (TryGetAddonMaster<RecommendEquip>(out var re))
+                if (TryGetAddonMasterIfFocused<RecommendEquip>(atk, out var re))
                     DrawEntries([re.EquipButton, re.CancelButton]);
-                if (TryGetAddonMaster<Repair>(out var rp))
+                if (TryGetAddonMasterIfFocused<Repair>(atk, out var rp))
                     DrawEntries(rp.Addon->RepairAllButton);
-                if (TryGetAddonMaster<Request>(out var rq))
+                if (TryGetAddonMasterIfFocused<Request>(atk, out var rq))
                     DrawEntries([rq.HandOverButton, rq.CancelButton]);
-                if (TryGetAddonMaster<RetainerItemTransferList>(out var ritl))
+                if (TryGetAddonMasterIfFocused<RetainerItemTransferList>(atk, out var ritl))
                     DrawEntries([ritl.Addon->ConfirmButton, ritl.Addon->CancelButton]);
-                if (TryGetAddonMaster<RetainerItemTransferProgress>(out var ritp))
+                if (TryGetAddonMasterIfFocused<RetainerItemTransferProgress>(atk, out var ritp))
                     DrawEntries(ritp.Addon->CloseWindowButton);
-                if (TryGetAddonMaster<RetainerSell>(out var rs))
+                if (TryGetAddonMasterIfFocused<RetainerSell>(atk, out var rs))
                     DrawEntries([rs.ConfirmButton, rs.CancelButton, rs.ComparePricesButton]);
-                if (TryGetAddonMaster<RetainerTaskAsk>(out var rta))
+                if (TryGetAddonMasterIfFocused<RetainerTaskAsk>(atk, out var rta))
                     DrawEntries([rta.AssignButton, rta.ReturnButton]);
-                if (TryGetAddonMaster<RetainerTaskResult>(out var rtr))
+                if (TryGetAddonMasterIfFocused<RetainerTaskResult>(atk, out var rtr))
                     DrawEntries([rtr.ReassignButton, rtr.ConfirmButton]);
-                if (TryGetAddonMaster<ReturnerDialog>(out var rd))
+                if (TryGetAddonMasterIfFocused<ReturnerDialog>(atk, out var rd))
                     DrawEntries([rd.AcceptButton, rd.DeclineButton, rd.DecideLaterButton]);
-                if (TryGetAddonMaster<SalvageAutoDialog>(out var sad))
+                if (TryGetAddonMasterIfFocused<SalvageAutoDialog>(atk, out var sad))
                     DrawEntries(sad.EndDesynthesisButton);
-                if (TryGetAddonMaster<SalvageResult>(out var sr))
+                if (TryGetAddonMasterIfFocused<SalvageResult>(atk, out var sr))
                     DrawEntries(sr.CloseButton);
-                if (TryGetAddonMaster<SelectYesno>(out var yn))
+                if (TryGetAddonMasterIfFocused<SelectYesno>(atk, out var yn))
                     DrawEntries([yn.Addon->YesButton, yn.Addon->NoButton]); // TODO: if the third button is present, no becomes wait and the third becomes no
-                if (TryGetAddonMaster<SelectOk>(out var ok))
+                if (TryGetAddonMasterIfFocused<SelectOk>(atk, out var ok))
                     DrawEntries(ok.Addon->OkButton); // TODO: these have a second button?
-                if (TryGetAddonMaster<ShopCardDialog>(out var scd))
+                if (TryGetAddonMasterIfFocused<ShopCardDialog>(atk, out var scd))
                     DrawEntries([scd.SellButton, scd.CancelButton]);
-                if (TryGetAddonMaster<TripleTriadRequest>(out var ttr))
+                if (TryGetAddonMasterIfFocused<TripleTriadRequest>(atk, out var ttr))
                     DrawEntries([ttr.ChallengeButton, ttr.QuitButton]);
-                if (TryGetAddonMaster<TripleTriadResult>(out var ttrr))
+                if (TryGetAddonMasterIfFocused<TripleTriadResult>(atk, out var ttrr))
                     DrawEntries([ttrr.RematchButton, ttrr.QuitButton]);
-                if (TryGetAddonMaster<WeeklyBingoResult>(out var wbr))
+                if (TryGetAddonMasterIfFocused<WeeklyBingoResult>(atk, out var wbr))
                     DrawEntries([wbr.AcceptButton, wbr.CancelButton]);
 
                 // generic callback addons
-                if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))
-                    DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
-                if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && IsAddonReady(cc))
-                    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
-                if (TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && IsAddonReady(ds))
-                    DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
+                //if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))
+                //    DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
+                //if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && IsAddonReady(cc))
+                //    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
+                //if (TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && IsAddonReady(ds))
+                //    DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
             }
             catch (Exception e)
             {
