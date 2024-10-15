@@ -3,7 +3,9 @@ using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
 using ECommons;
 using ECommons.Automation;
+using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
+using ECommons.Reflection;
 using ECommons.Singletons;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -27,9 +29,9 @@ namespace SelectString
         bool exec = false;
         static List<(float X, float Y, string Text)> DrawList = [];
         Clicker clickMgr;
-        FocusWatcher focusWatcher;
         KeyStateWatcher keyWatcher;
         List<Button> ActiveButtons = [];
+        TaskManager TM;
         const int horizontalOffset = 10;
 
         public SelectString(IDalamudPluginInterface pluginInterface)
@@ -37,10 +39,11 @@ namespace SelectString
             ECommonsMain.Init(pluginInterface, this);
             clickMgr = new Clicker();
             keyWatcher = new KeyStateWatcher();
+            TM = new();
             Svc.Framework.Update += Tick;
             KeyStateWatcher.NumKeyPressed += OnNumKeyPress;
             Svc.PluginInterface.UiBuilder.Draw += Draw;
-            Svc.Commands.AddHandler("/ss", new CommandInfo(delegate { exec ^= true; }));
+            Svc.Commands.AddHandler("/ss", new CommandInfo(delegate { Svc.Chat.Print(GetFocusedAddon()->NameString); }));
             SingletonServiceManager.Initialize(typeof(ServiceManager));
         }
 
@@ -58,24 +61,33 @@ namespace SelectString
         {
             public AtkComponentButton* Base => btn;
             public bool Active => ButtonActive(btn);
-            public Action Callback => buttonAction;
+            public Action ClickOverride => buttonAction;
             public string Id => btn->ButtonTextNode->NodeText.ToString();
 
-            public void DrawKey(int idx)
+            public void DrawKey(int idx, AtkResNode* node = null)
             {
-                var pos = GetNodePosition(btn->AtkResNode);
+                var drawNode = node != null ? node : btn->AtkResNode;
+                var pos = GetNodePosition(drawNode);
                 var text = IndexToText(idx);
                 // check whether an element with the same text already exists, and if it does, replace it with the new
                 DrawList.RemoveAll(x => x.Text == text);
                 // only offset if you passed a text node, otherwise it looks bad
-                DrawList.Add((btn->AtkResNode->GetAsAtkTextNode() == null ? pos.X : pos.X - horizontalOffset, pos.Y + btn->AtkResNode->Height / 2, text));
+                DrawList.Add((drawNode->GetAsAtkTextNode() == null ? pos.X : pos.X - horizontalOffset, pos.Y + drawNode->Height / 2, text));
             }
 
             public bool Click()
             {
+                if (ClickOverride != null)
+                {
+                    Svc.Log.Info($"Performing {ClickOverride.Method.Name}");
+                    ClickOverride();
+                    return true;
+                }
                 if (btn->IsEnabled && btn->AtkResNode->IsVisible())
                 {
-                    btn->ClickAddonButton(GetFocusedAddonFromNode(btn->AtkResNode));
+                    var adn = GetFocusedAddonFromNode(btn->AtkResNode);
+                    Svc.Log.Info($"Clicking button {Id} on {adn->NameString}");
+                    btn->ClickAddonButton(adn);
                     return true;
                 }
                 return false;
@@ -84,8 +96,8 @@ namespace SelectString
 
         private void OnNumKeyPress(int idx)
         {
-            Svc.Log.Info($"{idx} pressed");
-            if (ActiveButtons.Count == 0 || ActiveButtons.Count < idx) return;
+            Svc.Log.Info($"{idx} pressed. {ActiveButtons.Count}");
+            if (ActiveButtons.Count == 0 || idx >= ActiveButtons.Count) return;
             ActiveButtons[idx].Click();
         }
 
@@ -101,18 +113,22 @@ namespace SelectString
                 var atk = GetFocusedAddon();
                 if (atk == null || !IsAddonReady(atk)) return;
                 // requires special handling
-                //if (TryGetAddonMaster<AddonMaster.SelectString>(atk->NameString, out var ss))
-                //    DrawEntries(ss);
-                //if (TryGetAddonMaster<SelectIconString>(atk->NameString, out var sis))
-                //    DrawEntries(sis);
-                //if (TryGetAddonMaster<ContextMenu>(atk->NameString, out var cm))
-                //    DrawEntries(cm);
+                if (TryGetAddonMasterIfFocused<AddonMaster.SelectString>(atk, out var ss))
+                    DrawEntries(ss);
+                if (TryGetAddonMasterIfFocused<SelectIconString>(atk, out var sis))
+                    DrawEntries(sis);
+                if (TryGetAddonMasterIfFocused<ContextMenu>(atk, out var cm))
+                    DrawEntries(cm);
                 //if (TryGetAddonMaster<JournalDetail>(atk->NameString, out var jd)) // this addon is never highest focus unless manually clicked on
                 //    DrawEntries(jd);
                 //if (TryGetAddonMaster<RetainerList>(atk->NameString, out var rl))
                 //    DrawEntries(rl);
                 //if (TryGetAddonMaster<GcArmyMenberProfile>(atk->NameString, out var gcp))
                 //    DrawEntries(gcp);
+                if (TryGetAddonMasterIfFocused<_CharaSelectListMenu>(atk, out var cslm))
+                    DrawEntries(cslm);
+                if (TryGetAddonMasterIfFocused<BankaCraftworksSupply>(atk, out var bcs))
+                    DrawEntries(bcs);
 
                 // generic button addons
                 if (TryGetAddonMasterIfFocused<AirShipExploration>(atk, out var ase))
@@ -125,6 +141,8 @@ namespace SelectString
                     DrawEntries(ccrn.BeginButton);
                 if (TryGetAddonMasterIfFocused<CompanyCraftSupply>(atk, out var ccs))
                     DrawEntries(ccs.CloseButton);
+                if (TryGetAddonMasterIfFocused<Dialogue>(atk, out var d))
+                    DrawEntries([d.OkButton]);
                 if (TryGetAddonMasterIfFocused<DifficultySelectYesNo>(atk, out var dyn))
                     DrawEntries([dyn.ProceedButton, dyn.LeaveButton]); // TODO: the radio buttons
                 if (TryGetAddonMasterIfFocused<GcArmyChangeClass>(atk, out var gcac))
@@ -141,6 +159,8 @@ namespace SelectString
                     DrawEntries([iir.NextButton, iir.CloseButton]);
                 if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
                     DrawEntries([jr.Addon->CompleteButton, jr.Addon->DeclineButton]);
+                if (TryGetAddonMasterIfFocused<LetterHistory>(atk, out var lh))
+                    DrawEntries(lh.CloseButton);
                 if (TryGetAddonMasterIfFocused<LetterList>(atk, out var ll))
                     DrawEntries([ll.NewButton, ll.SentLetterHistoryButton, ll.DeliveryRequestButton]);
                 if (TryGetAddonMasterIfFocused<LetterViewer>(atk, out var lv))
@@ -201,6 +221,8 @@ namespace SelectString
                     DrawEntries(ok.Addon->OkButton); // TODO: these have a second button?
                 if (TryGetAddonMasterIfFocused<ShopCardDialog>(atk, out var scd))
                     DrawEntries([scd.SellButton, scd.CancelButton]);
+                if (TryGetAddonMasterIfFocused<ShopExchangeItemDialog>(atk, out var seid))
+                    DrawEntries([seid.ExchangeButton, seid.CancelButton]);
                 if (TryGetAddonMasterIfFocused<TripleTriadRequest>(atk, out var ttr))
                     DrawEntries([ttr.ChallengeButton, ttr.QuitButton]);
                 if (TryGetAddonMasterIfFocused<TripleTriadResult>(atk, out var ttrr))
@@ -209,12 +231,12 @@ namespace SelectString
                     DrawEntries([wbr.AcceptButton, wbr.CancelButton]);
 
                 // generic callback addons
-                //if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))
-                //    DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
-                //if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && IsAddonReady(cc))
-                //    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
-                //if (TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && IsAddonReady(ds))
-                //    DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
+                if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))
+                    DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
+                if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && IsAddonReady(cc))
+                    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
+                if (TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && IsAddonReady(ds))
+                    DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
             }
             catch (Exception e)
             {
@@ -241,44 +263,25 @@ namespace SelectString
         }
 
         #region Generic Draws
-        private void DrawEntries(AtkComponentButton* btn)
-        {
-            ActiveButtons.Clear();
-            keyWatcher.Enabled = true;
-            var button = new Button(btn);
-            if (button.Active)
-            {
-                ActiveButtons.Add(new(btn));
-                ActiveButtons[0].DrawKey(0);
-            }
-        }
-
+        private void DrawEntries(AtkComponentButton* btn) => DrawEntries([btn]);
         private void DrawEntries(List<Pointer<AtkComponentButton>> btns)
         {
             ActiveButtons.Clear();
-            keyWatcher.Enabled = true;
-            var buttons = new List<Button>();
-            btns.ForEach(x => buttons.Add(new(x)));
-            foreach (var btn in buttons)
-            {
+            btns.ForEach(x => ActiveButtons.Add(new(x)));
+            foreach (var btn in ActiveButtons)
                 if (btn.Active)
-                {
-                    ActiveButtons.Add(btn);
-                    btn.DrawKey(buttons.IndexOf(btn));
-                }
-            }
+                    btn.DrawKey(ActiveButtons.IndexOf(btn));
+            keyWatcher.Enabled = true;
         }
 
         private void DrawEntries(AtkUnitBase* atk, AtkComponentButton* btn, params object[] callback)
         {
             ActiveButtons.Clear();
-            keyWatcher.Enabled = true;
-            var button = new Button(btn, () => Callback.Fire(atk, true, callback));
+            ActiveButtons.Add(new(btn, () => Callback.Fire(atk, true, callback)));
+            var button = ActiveButtons.First();
             if (button.Active)
-            {
-                ActiveButtons.Add(button);
-                ActiveButtons[0].DrawKey(0);
-            }
+                button.DrawKey(0);
+            keyWatcher.Enabled = true;
         }
         #endregion
 
@@ -286,159 +289,158 @@ namespace SelectString
         #region Custom Draws
         private void DrawEntries(AddonMaster.SelectString am)
         {
-            //Svc.Chat.Print($"{addonSelectStringBase->X * addonSelectStringBase->Scale}, {addonSelectStringBase->Y * addonSelectStringBase->Scale}");
+            ActiveButtons.Clear();
             if (am.Base->UldManager.NodeListCount < 3) return;
+
             var listNode = am.Base->UldManager.NodeList[2];
             var textNode = (AtkTextNode*)am.Base->UldManager.NodeList[3];
-            //Svc.Chat.Print($"{listNode->X}, {listNode->Y}");
             for (ushort i = 0; i < Math.Min(am.Addon->PopupMenu.PopupMenu.EntryCount, 12); i++)
             {
-                CheckKeyState(i, () => clickMgr.ClickItemThrottled(() => am.Entries[i].Select(), textNode->NodeText.ToString()));
-                //Svc.Chat.Print(Marshal.PtrToStringUTF8((IntPtr)addonSelectString->PopupMenu.EntryNames[i]));
                 var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
                 var itemText = listComponent->GetComponent()->UldManager.NodeList[3]->GetAsAtkTextNode()->AtkResNode;
-                //Svc.Chat.Print($"{listComponent->X}, {listComponent->Y}");
-                DrawKey(i, &itemText);
+                ActiveButtons.Add(new(null, am.Entries[i].Select));
+                ActiveButtons[i].DrawKey(i, &itemText);
             }
+            keyWatcher.Enabled = true;
         }
 
         private void DrawEntries(SelectIconString am)
         {
+            ActiveButtons.Clear();
             if (am.Base->UldManager.NodeListCount < 3) return;
+
             var listNode = am.Base->UldManager.NodeList[2];
             var textNode = (AtkTextNode*)am.Base->UldManager.NodeList[3];
             for (ushort i = 0; i < Math.Min(am.Addon->PopupMenu.PopupMenu.EntryCount, 12); i++)
             {
-                CheckKeyState(i, () => clickMgr.ClickItemThrottled(() => am.Entries[i].Select(), textNode->NodeText.ToString()));
                 var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
-                var itemText = listComponent->GetComponent()->UldManager.NodeList[4]->GetAsAtkTextNode()->AtkResNode;
-                DrawKey(i, &itemText);
+                var itemText = listComponent->GetComponent()->UldManager.NodeList[3]->GetAsAtkTextNode()->AtkResNode;
+                ActiveButtons.Add(new(null, am.Entries[i].Select));
+                ActiveButtons[i].DrawKey(i, &itemText);
             }
+            keyWatcher.Enabled = true;
         }
 
         private void DrawEntries(ContextMenu am)
         {
+            ActiveButtons.Clear();
             if (am.Base->AtkValuesCount <= 7) return;
+
             var listNode = am.Base->UldManager.NodeList[2];
             for (ushort i = 0; i < Math.Min(am.Entries.Length, 12); i++)
             {
                 var entry = am.Entries[i];
                 if (!entry.IsNativeEntry) continue;
 
-                CheckKeyState(i, () => clickMgr.ClickItemThrottled(() => am.Entries[i].Select(), entry.Text));
                 var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
                 var itemText = listComponent->GetComponent()->UldManager.NodeList[6]->GetAsAtkTextNode()->AtkResNode;
-                DrawKey(i, &itemText);
+                ActiveButtons.Add(new(null, () => am.Entries[i].Select()));
+                ActiveButtons[i].DrawKey(i, &itemText);
             }
+            keyWatcher.Enabled = true;
         }
 
-        private void DrawEntries(JournalDetail am)
+        private void DrawEntries(BankaCraftworksSupply am)
         {
-            if (ButtonActive(am.Addon->InitiateButton))
-            {
-                CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Initiate(), "Initiate"));
-                DrawKey(0, am.Addon->InitiateButton->AtkResNode);
+            ActiveButtons.Clear();
 
-                if (ButtonActive(am.Addon->AcceptMapButton))
-                {
-                    CheckKeyState(2, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Map"));
-                    DrawKey(2, am.Addon->AcceptMapButton->AtkResNode);
-                }
-            }
-            else
+            ActiveButtons.AddRange([new(am.DeliverButton), new(am.CancelButton)]);
+            foreach (var btn in ActiveButtons)
+                if (btn.Active)
+                    btn.DrawKey(ActiveButtons.IndexOf(btn));
+
+            var slot = am.FirstUnfilledSlot;
+            if (slot != null && am.SlotsFilled.Count < am.RequestedItemNumberAvailable)
             {
-                if (ButtonActive(am.Addon->AcceptMapButton))
-                {
-                    CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Accept"));
-                    DrawKey(0, am.Addon->AcceptMapButton->AtkResNode);
-                }
+                ActiveButtons.Add(new(null, () => TM.Enqueue(() => am.TryHandOver(slot.Value))));
+                ActiveButtons.Last().DrawKey(ActiveButtons.Count - 1, &am.Addon->GetComponentNodeById(50)->AtkResNode);
             }
-            if (ButtonActive(am.Addon->AbandonDeclineButton))
-            {
-                CheckKeyState(1, () => clickMgr.ClickItemThrottled(() => am.AbandonDecline(), "Abandon"));
-                DrawKey(1, am.Addon->AbandonDeclineButton->AtkResNode);
-            }
+            keyWatcher.Enabled = true;
         }
 
-        private void DrawEntries(RetainerList am)
+        private void DrawEntries(_CharaSelectListMenu am)
         {
-            var list = am.Addon->GetComponentListById(27);
+            ActiveButtons.Clear();
+            var list = am.Addon->GetComponentListById(13);
             foreach (var node in Enumerable.Range(0, list->GetItemCount()))
             {
                 var item = list->GetItemRenderer(node);
                 if (item == null)
                     continue;
-
-                CheckKeyState(node, () => clickMgr.ClickItemThrottled(() => am.Retainers[node].Select(), am.Retainers[node].Name));
-                DrawKey(node, item->AtkResNode);
+                ActiveButtons.Add(new(null, am.Characters[node].Login));
+                ActiveButtons[node].DrawKey(node, item->AtkResNode);
             }
+            keyWatcher.Enabled = true;
         }
 
-        private void DrawEntries(GcArmyMenberProfile am)
-        {
-            if (am.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
-            {
-                CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.Question, am.QuestionButton->ButtonTextNode->NodeText.ToString()));
-                DrawKey(0, am.QuestionButton->AtkResNode);
-                CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.Postpone, am.PostponeButton->ButtonTextNode->NodeText.ToString()));
-                DrawKey(1, am.PostponeButton->AtkResNode);
-                CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.Dismiss, am.DismissButton->ButtonTextNode->NodeText.ToString()));
-                DrawKey(2, am.DismissButton->AtkResNode);
-            }
-            //else
-            //{
-            //    // TODO: get radio buttons working
-            //    // Note: DisplayOrders is sometimes not visible at all, considering shifting all the numbers accordingly
-            //    CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.DisplayOrders, am.DisplayOrdersButton->ButtonTextNode->NodeText.ToString()));
-            //    DrawKey(0, am.DisplayOrdersButton->AtkResNode);
-            //    CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.ChangeClass, am.ChangeClassButton->ButtonTextNode->NodeText.ToString()));
-            //    DrawKey(1, am.ChangeClassButton->AtkResNode);
-            //    CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.ConfirmChemistry, am.ConfirmChemistryButton->ButtonTextNode->NodeText.ToString()));
-            //    DrawKey(2, am.ConfirmChemistryButton->AtkResNode);
-            //    CheckKeyState(3, () => clickMgr.ClickItemThrottled(am.Outfit, am.OutfitButton->ButtonTextNode->NodeText.ToString()));
-            //    DrawKey(3, am.OutfitButton->AtkResNode);
-            //}
-        }
+        //private void DrawEntries(JournalDetail am)
+        //{
+        //    if (ButtonActive(am.Addon->InitiateButton))
+        //    {
+        //        CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Initiate(), "Initiate"));
+        //        DrawKey(0, am.Addon->InitiateButton->AtkResNode);
+
+        //        if (ButtonActive(am.Addon->AcceptMapButton))
+        //        {
+        //            CheckKeyState(2, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Map"));
+        //            DrawKey(2, am.Addon->AcceptMapButton->AtkResNode);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (ButtonActive(am.Addon->AcceptMapButton))
+        //        {
+        //            CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Accept"));
+        //            DrawKey(0, am.Addon->AcceptMapButton->AtkResNode);
+        //        }
+        //    }
+        //    if (ButtonActive(am.Addon->AbandonDeclineButton))
+        //    {
+        //        CheckKeyState(1, () => clickMgr.ClickItemThrottled(() => am.AbandonDecline(), "Abandon"));
+        //        DrawKey(1, am.Addon->AbandonDeclineButton->AtkResNode);
+        //    }
+        //}
+
+        //private void DrawEntries(RetainerList am)
+        //{
+        //    var list = am.Addon->GetComponentListById(27);
+        //    foreach (var node in Enumerable.Range(0, list->GetItemCount()))
+        //    {
+        //        var item = list->GetItemRenderer(node);
+        //        if (item == null)
+        //            continue;
+
+        //        CheckKeyState(node, () => clickMgr.ClickItemThrottled(() => am.Retainers[node].Select(), am.Retainers[node].Name));
+        //        DrawKey(node, item->AtkResNode);
+        //    }
+        //}
+
+        //private void DrawEntries(GcArmyMenberProfile am)
+        //{
+        //    if (am.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
+        //    {
+        //        CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.Question, am.QuestionButton->ButtonTextNode->NodeText.ToString()));
+        //        DrawKey(0, am.QuestionButton->AtkResNode);
+        //        CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.Postpone, am.PostponeButton->ButtonTextNode->NodeText.ToString()));
+        //        DrawKey(1, am.PostponeButton->AtkResNode);
+        //        CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.Dismiss, am.DismissButton->ButtonTextNode->NodeText.ToString()));
+        //        DrawKey(2, am.DismissButton->AtkResNode);
+        //    }
+        //    //else
+        //    //{
+        //    //    // TODO: get radio buttons working
+        //    //    // Note: DisplayOrders is sometimes not visible at all, considering shifting all the numbers accordingly
+        //    //    CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.DisplayOrders, am.DisplayOrdersButton->ButtonTextNode->NodeText.ToString()));
+        //    //    DrawKey(0, am.DisplayOrdersButton->AtkResNode);
+        //    //    CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.ChangeClass, am.ChangeClassButton->ButtonTextNode->NodeText.ToString()));
+        //    //    DrawKey(1, am.ChangeClassButton->AtkResNode);
+        //    //    CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.ConfirmChemistry, am.ConfirmChemistryButton->ButtonTextNode->NodeText.ToString()));
+        //    //    DrawKey(2, am.ConfirmChemistryButton->AtkResNode);
+        //    //    CheckKeyState(3, () => clickMgr.ClickItemThrottled(am.Outfit, am.OutfitButton->ButtonTextNode->NodeText.ToString()));
+        //    //    DrawKey(3, am.OutfitButton->AtkResNode);
+        //    //}
+        //}
         #endregion
-
-        private static void CheckKeyState(int i, Action clickAction) => CheckKeyState((ushort)i, clickAction);
-        private static void CheckKeyState(ushort i, Action clickAction)
-        {
-            if (i < 10)
-            {
-                var state = Svc.KeyState.GetRawValue(49 + (i == 9 ? -1 : i));
-                if (state == 3)
-                {
-                    Svc.KeyState.SetRawValue(49 + (i == 9 ? -1 : i), 0);
-                    clickAction();
-                }
-                state = Svc.KeyState.GetRawValue(97 + (i == 9 ? -1 : i));
-                if (state == 3)
-                {
-                    Svc.KeyState.SetRawValue(97 + (i == 9 ? -1 : i), 0);
-                    clickAction();
-                }
-            }
-            else
-            {
-                var state = Svc.KeyState.GetRawValue(189 + (i == 10 ? 0 : -2));
-                if (state == 3)
-                {
-                    Svc.KeyState.SetRawValue(189 + (i == 10 ? 0 : -2), 0);
-                    clickAction();
-                }
-            }
-        }
-
-        private void DrawKey(int idx, AtkResNode* node)
-        {
-            var pos = GetNodePosition(node);
-            var text = IndexToText(idx);
-            // only offset if you passed a text node, otherwise it looks bad
-            // check whether an element with the same text already exists, and if it does, replace it with the new
-            DrawList.RemoveAll(x => x.Text == text);
-            DrawList.Add((node->GetAsAtkTextNode() == null ? pos.X : pos.X - horizontalOffset, pos.Y + node->Height / 2, text));
-        }
 
         private static string IndexToText(int idx) => $"{(idx == 11 ? "=" : (idx == 10 ? "-" : (idx == 9 ? 0 : idx + 1)))}";
 
@@ -466,8 +468,13 @@ namespace SelectString
 
         public static bool TryGetAddonMasterIfFocused<T>(AtkUnitBase* atk, out T addonMaster) where T : IAddonMasterBase
         {
-            addonMaster = (T)Activator.CreateInstance(typeof(T), [(nint)atk]);
-            return addonMaster.Base == atk;
+            if (typeof(T).Name.Split(".")[^1] == atk->NameString)
+            {
+                addonMaster = (T)Activator.CreateInstance(typeof(T), [(nint)atk]);
+                return addonMaster.Base == atk;
+            }
+            addonMaster = default;
+            return false;
         }
 
         /// <summary>
