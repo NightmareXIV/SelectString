@@ -5,7 +5,6 @@ using ECommons;
 using ECommons.Automation;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
-using ECommons.Reflection;
 using ECommons.Singletons;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -28,7 +27,6 @@ namespace SelectString
         public string Name => "SelectString";
         bool exec = false;
         static List<(float X, float Y, string Text)> DrawList = [];
-        Clicker clickMgr;
         KeyStateWatcher keyWatcher;
         List<Button> ActiveButtons = [];
         TaskManager TM;
@@ -37,9 +35,9 @@ namespace SelectString
         public SelectString(IDalamudPluginInterface pluginInterface)
         {
             ECommonsMain.Init(pluginInterface, this);
-            clickMgr = new Clicker();
-            keyWatcher = new KeyStateWatcher();
+            keyWatcher = new();
             TM = new();
+
             Svc.Framework.Update += Tick;
             KeyStateWatcher.NumKeyPressed += OnNumKeyPress;
             Svc.PluginInterface.UiBuilder.Draw += Draw;
@@ -64,9 +62,9 @@ namespace SelectString
             public Action ClickOverride => buttonAction;
             public string Id => btn->ButtonTextNode->NodeText.ToString();
 
-            public void DrawKey(int idx, AtkResNode* node = null)
+            public void DrawKey(int idx, AtkResNode* drawNodeOverride = null)
             {
-                var drawNode = node != null ? node : btn->AtkResNode;
+                var drawNode = drawNodeOverride != null ? drawNodeOverride : btn->AtkResNode;
                 var pos = GetNodePosition(drawNode);
                 var text = IndexToText(idx);
                 // check whether an element with the same text already exists, and if it does, replace it with the new
@@ -119,24 +117,26 @@ namespace SelectString
                     DrawEntries(sis);
                 if (TryGetAddonMasterIfFocused<ContextMenu>(atk, out var cm))
                     DrawEntries(cm);
-                //if (TryGetAddonMaster<JournalDetail>(atk->NameString, out var jd)) // this addon is never highest focus unless manually clicked on
-                //    DrawEntries(jd);
-                //if (TryGetAddonMaster<RetainerList>(atk->NameString, out var rl))
-                //    DrawEntries(rl);
-                //if (TryGetAddonMaster<GcArmyMenberProfile>(atk->NameString, out var gcp))
-                //    DrawEntries(gcp);
+                if (TryGetAddonMasterIfFocused<RetainerList>(atk, out var rl))
+                    DrawEntries(rl);
+                if (TryGetAddonMasterIfFocused<GcArmyMenberProfile>(atk, out var gcp))
+                    DrawEntries(gcp);
                 if (TryGetAddonMasterIfFocused<_CharaSelectListMenu>(atk, out var cslm))
                     DrawEntries(cslm);
                 if (TryGetAddonMasterIfFocused<BankaCraftworksSupply>(atk, out var bcs))
                     DrawEntries(bcs);
 
                 // generic button addons
+                if (TryGetAddonMasterIfFocused<_TitleMenu>(atk, out var tm))
+                    DrawEntries([tm.StartButton, tm.DataCenterButton, tm.MoviesAndTitlesButton, tm.OptionsButton, tm.LicenseButton, tm.ExitButton]);
                 if (TryGetAddonMasterIfFocused<AirShipExploration>(atk, out var ase))
                     DrawEntries(ase.DeployButton);
                 if (TryGetAddonMasterIfFocused<AirShipExplorationResult>(atk, out var aser))
                     DrawEntries([aser.RedeployButton, aser.FinalizeReportButton]);
                 if (TryGetAddonMasterIfFocused<CollectablesShop>(atk, out var cs))
                     DrawEntries(cs.TradeButton);
+                if (TryGetAddonMasterIfFocused<ColorantColoring>(atk, out var cc))
+                    DrawEntries([cc.ApplyButton, cc.SelectAnotherButton]);
                 if (TryGetAddonMasterIfFocused<CompanyCraftRecipeNoteBook>(atk, out var ccrn))
                     DrawEntries(ccrn.BeginButton);
                 if (TryGetAddonMasterIfFocused<CompanyCraftSupply>(atk, out var ccs))
@@ -157,6 +157,10 @@ namespace SelectString
                     DrawEntries(gsl.EquipSetButton);
                 if (TryGetAddonMasterIfFocused<ItemInspectionResult>(atk, out var iir))
                     DrawEntries([iir.NextButton, iir.CloseButton]);
+                if (TryGetAddonMasterIfFocused<InputNumeric>(atk, out var inu))
+                    DrawEntries([inu.OkButton, inu.CancelButton]);
+                if (TryGetAddonMasterIfFocused<JournalDetail>(atk, out var jd))
+                    DrawEntries([jd.Addon->AcceptMapButton, jd.Addon->InitiateButton, jd.Addon->AbandonDeclineButton]);
                 if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
                     DrawEntries([jr.Addon->CompleteButton, jr.Addon->DeclineButton]);
                 if (TryGetAddonMasterIfFocused<LetterHistory>(atk, out var lh))
@@ -177,6 +181,10 @@ namespace SelectString
                     DrawEntries([lwi.PurchaseButton, lwi.RandomButton]);
                 if (TryGetAddonMasterIfFocused<LotteryWeeklyRewardList>(atk, out var lwrl))
                     DrawEntries(lwrl.CloseButton);
+                if (TryGetAddonMasterIfFocused<ManeuversArmorBoarding>(atk, out var mab))
+                    DrawEntries([mab.CruiseChaserButton, mab.OppressorButton, mab.BruteJusticeButton, mab.MountButton]);
+                if (TryGetAddonMasterIfFocused<ManeuversRecord>(atk, out var mr))
+                    DrawEntries(mr.LeaveButton);
                 if (TryGetAddonMasterIfFocused<MateriaAttachDialog>(atk, out var mad))
                     DrawEntries([mad.MeldButton, mad.ReturnButton]);
                 if (TryGetAddonMasterIfFocused<MaterializeDialog>(atk, out var md))
@@ -191,6 +199,10 @@ namespace SelectString
                     DrawEntries(pad.CancelExitButton);
                 if (TryGetAddonMasterIfFocused<PurifyResult>(atk, out var pr))
                     DrawEntries([pr.AutomaticButton, pr.CloseButton]);
+                if (TryGetAddonMasterIfFocused<PvpProfile>(atk, out var pp))
+                    DrawEntries(pp.SeriesMalmstonesButton);
+                if (TryGetAddonMasterIfFocused<PvpReward>(atk, out var pw))
+                    DrawEntries(pw.CloseButton);
                 if (TryGetAddonMasterIfFocused<RecipeNote>(atk, out var rn))
                     DrawEntries([rn.Addon->SynthesizeButton, rn.Addon->QuickSynthesisButton, rn.Addon->TrialSynthesisButton]);
                 if (TryGetAddonMasterIfFocused<RecommendEquip>(atk, out var re))
@@ -221,20 +233,24 @@ namespace SelectString
                     DrawEntries(ok.Addon->OkButton); // TODO: these have a second button?
                 if (TryGetAddonMasterIfFocused<ShopCardDialog>(atk, out var scd))
                     DrawEntries([scd.SellButton, scd.CancelButton]);
+                if (TryGetAddonMasterIfFocused<ShopExchangeCurrencyDialog>(atk, out var secd))
+                    DrawEntries([secd.ExchangeButton, secd.CancelButton]);
                 if (TryGetAddonMasterIfFocused<ShopExchangeItemDialog>(atk, out var seid))
                     DrawEntries([seid.ExchangeButton, seid.CancelButton]);
                 if (TryGetAddonMasterIfFocused<TripleTriadRequest>(atk, out var ttr))
                     DrawEntries([ttr.ChallengeButton, ttr.QuitButton]);
                 if (TryGetAddonMasterIfFocused<TripleTriadResult>(atk, out var ttrr))
                     DrawEntries([ttrr.RematchButton, ttrr.QuitButton]);
+                if (TryGetAddonMasterIfFocused<VoteMvp>(atk, out var vm))
+                    DrawEntries([vm.OkButton, vm.CancelButton]);
                 if (TryGetAddonMasterIfFocused<WeeklyBingoResult>(atk, out var wbr))
                     DrawEntries([wbr.AcceptButton, wbr.CancelButton]);
 
                 // generic callback addons
                 if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))
                     DrawEntries(fl, fl->UldManager.NodeList[3]->GetAsAtkComponentButton(), -1);
-                if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var cc) && IsAddonReady(cc))
-                    DrawEntries(cc, cc->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
+                if (TryGetAddonByName<AtkUnitBase>("MKSRecord", out var mks) && IsAddonReady(mks))
+                    DrawEntries(mks, mks->UldManager.NodeList[4]->GetAsAtkComponentButton(), -1);
                 if (TryGetAddonByName<AtkUnitBase>("DawnStory", out var ds) && IsAddonReady(ds))
                     DrawEntries(ds, ds->UldManager.NodeList[84]->GetAsAtkComponentButton(), 14);
             }
@@ -334,7 +350,8 @@ namespace SelectString
 
                 var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
                 var itemText = listComponent->GetComponent()->UldManager.NodeList[6]->GetAsAtkTextNode()->AtkResNode;
-                ActiveButtons.Add(new(null, () => am.Entries[i].Select()));
+                var idx = i;
+                ActiveButtons.Add(new(null, () => am.Entries[idx].Select()));
                 ActiveButtons[i].DrawKey(i, &itemText);
             }
             keyWatcher.Enabled = true;
@@ -373,73 +390,35 @@ namespace SelectString
             keyWatcher.Enabled = true;
         }
 
-        //private void DrawEntries(JournalDetail am)
-        //{
-        //    if (ButtonActive(am.Addon->InitiateButton))
-        //    {
-        //        CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.Initiate(), "Initiate"));
-        //        DrawKey(0, am.Addon->InitiateButton->AtkResNode);
+        private void DrawEntries(RetainerList am)
+        {
+            ActiveButtons.Clear();
 
-        //        if (ButtonActive(am.Addon->AcceptMapButton))
-        //        {
-        //            CheckKeyState(2, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Map"));
-        //            DrawKey(2, am.Addon->AcceptMapButton->AtkResNode);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (ButtonActive(am.Addon->AcceptMapButton))
-        //        {
-        //            CheckKeyState(0, () => clickMgr.ClickItemThrottled(() => am.AcceptMap(), "Accept"));
-        //            DrawKey(0, am.Addon->AcceptMapButton->AtkResNode);
-        //        }
-        //    }
-        //    if (ButtonActive(am.Addon->AbandonDeclineButton))
-        //    {
-        //        CheckKeyState(1, () => clickMgr.ClickItemThrottled(() => am.AbandonDecline(), "Abandon"));
-        //        DrawKey(1, am.Addon->AbandonDeclineButton->AtkResNode);
-        //    }
-        //}
+            var list = am.Addon->GetComponentListById(27);
+            foreach (var node in Enumerable.Range(0, list->GetItemCount()))
+            {
+                var item = list->GetItemRenderer(node);
+                if (item == null)
+                    continue;
 
-        //private void DrawEntries(RetainerList am)
-        //{
-        //    var list = am.Addon->GetComponentListById(27);
-        //    foreach (var node in Enumerable.Range(0, list->GetItemCount()))
-        //    {
-        //        var item = list->GetItemRenderer(node);
-        //        if (item == null)
-        //            continue;
+                var idx = node;
+                ActiveButtons.Add(new(null, () => am.Retainers[idx].Select()));
+                ActiveButtons[node].DrawKey(node, item->AtkResNode);
+            }
+            keyWatcher.Enabled = true;
+        }
 
-        //        CheckKeyState(node, () => clickMgr.ClickItemThrottled(() => am.Retainers[node].Select(), am.Retainers[node].Name));
-        //        DrawKey(node, item->AtkResNode);
-        //    }
-        //}
-
-        //private void DrawEntries(GcArmyMenberProfile am)
-        //{
-        //    if (am.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
-        //    {
-        //        CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.Question, am.QuestionButton->ButtonTextNode->NodeText.ToString()));
-        //        DrawKey(0, am.QuestionButton->AtkResNode);
-        //        CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.Postpone, am.PostponeButton->ButtonTextNode->NodeText.ToString()));
-        //        DrawKey(1, am.PostponeButton->AtkResNode);
-        //        CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.Dismiss, am.DismissButton->ButtonTextNode->NodeText.ToString()));
-        //        DrawKey(2, am.DismissButton->AtkResNode);
-        //    }
-        //    //else
-        //    //{
-        //    //    // TODO: get radio buttons working
-        //    //    // Note: DisplayOrders is sometimes not visible at all, considering shifting all the numbers accordingly
-        //    //    CheckKeyState(0, () => clickMgr.ClickItemThrottled(am.DisplayOrders, am.DisplayOrdersButton->ButtonTextNode->NodeText.ToString()));
-        //    //    DrawKey(0, am.DisplayOrdersButton->AtkResNode);
-        //    //    CheckKeyState(1, () => clickMgr.ClickItemThrottled(am.ChangeClass, am.ChangeClassButton->ButtonTextNode->NodeText.ToString()));
-        //    //    DrawKey(1, am.ChangeClassButton->AtkResNode);
-        //    //    CheckKeyState(2, () => clickMgr.ClickItemThrottled(am.ConfirmChemistry, am.ConfirmChemistryButton->ButtonTextNode->NodeText.ToString()));
-        //    //    DrawKey(2, am.ConfirmChemistryButton->AtkResNode);
-        //    //    CheckKeyState(3, () => clickMgr.ClickItemThrottled(am.Outfit, am.OutfitButton->ButtonTextNode->NodeText.ToString()));
-        //    //    DrawKey(3, am.OutfitButton->AtkResNode);
-        //    //}
-        //}
+        private void DrawEntries(GcArmyMenberProfile am)
+        {
+            if (am.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
+                DrawEntries([am.QuestionButton, am.PostponeButton, am.DismissButton]);
+            //else
+            //{
+            //    // TODO: get radio buttons working
+            //    // Note: DisplayOrders is sometimes not visible at all, considering shifting all the numbers accordingly
+            //    DrawEntries([am.DisplayOrdersButton, am.ChangeClassButton, am.ConfirmChemistryButton, am.OutfitButton]);
+            //}
+        }
         #endregion
 
         private static string IndexToText(int idx) => $"{(idx == 11 ? "=" : (idx == 10 ? "-" : (idx == 9 ? 0 : idx + 1)))}";
@@ -491,7 +470,13 @@ namespace SelectString
             {
                 var atk = RaptureAtkUnitManager.Instance()->FocusedUnitsList.Entries[i].Value;
                 if (atk != null && atk->RootNode == GetRootNode(focus))
-                    return atk;
+                {
+                    // JournalDetail is never in focus when brought up, but is always up when Journal is, which we don't care about so just return JD
+                    if (TryGetAddonByName<AtkUnitBase>("Journal", out var addon) && addon == atk)
+                        return (AtkUnitBase*)Svc.GameGui.GetAddonByName("JournalDetail");
+                    else
+                        return atk;
+                }
             }
             return null;
         }
@@ -506,25 +491,5 @@ namespace SelectString
             }
             return null;
         }
-
-        //public static bool AddonMasterFocused<T>(AtkUnitBase* addon, out T addonMaster) where T : IAddonMasterBase
-        //{
-        //    if (TryGetAddonMaster<T>(out var am) && (am.Base == addon || am.IsAddonOnlyFocus))
-        //    {
-        //        addonMaster = am;
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        addonMaster = default;
-        //        return false;
-        //    }
-        //}
-
-        //public static bool GetFocusedAddonMaster<T>(AtkUnitBase* addon, out T addonMaster) where T : IAddonMasterBase
-        //{
-        //    addonMaster = (T)Activator.CreateInstance(typeof(T), (nint)addon);
-        //    return true;
-        //}
     }
 }
