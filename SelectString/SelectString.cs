@@ -58,7 +58,7 @@ namespace SelectString
         private class Button(AtkComponentButton* btn, Action buttonAction = null)
         {
             public AtkComponentButton* Base => btn;
-            public bool Active => ButtonActive(btn);
+            public bool Active => GetNodeVisible(btn->AtkResNode);
             public Action ClickOverride => buttonAction;
             public string Id => btn->ButtonTextNode->NodeText.ToString();
 
@@ -119,8 +119,6 @@ namespace SelectString
                     DrawEntries(cm);
                 if (TryGetAddonMasterIfFocused<RetainerList>(atk, out var rl))
                     DrawEntries(rl);
-                if (TryGetAddonMasterIfFocused<GcArmyMenberProfile>(atk, out var gcp))
-                    DrawEntries(gcp);
                 if (TryGetAddonMasterIfFocused<_CharaSelectListMenu>(atk, out var cslm))
                     DrawEntries(cslm);
                 if (TryGetAddonMasterIfFocused<BankaCraftworksSupply>(atk, out var bcs))
@@ -141,6 +139,8 @@ namespace SelectString
                     DrawEntries(ccrn.BeginButton);
                 if (TryGetAddonMasterIfFocused<CompanyCraftSupply>(atk, out var ccs))
                     DrawEntries(ccs.CloseButton);
+                if (TryGetAddonMasterIfFocused<ContentsFinderSetting>(atk, out var cfs))
+                    DrawEntries([cfs.ConfirmButton, cfs.CloseButton]);
                 if (TryGetAddonMasterIfFocused<Dialogue>(atk, out var d))
                     DrawEntries([d.OkButton]);
                 if (TryGetAddonMasterIfFocused<DifficultySelectYesNo>(atk, out var dyn))
@@ -151,6 +151,12 @@ namespace SelectString
                     DrawEntries(gae.Addon->DeployButton);
                 if (TryGetAddonMasterIfFocused<GcArmyExpeditionResult>(atk, out var gaer))
                     DrawEntries(gaer.Addon->CompleteButton);
+                if (TryGetAddonMasterIfFocused<GcArmyMenberProfile>(atk, out var gcp))
+                {
+                    if (gcp.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
+                        DrawEntries([gcp.QuestionButton, gcp.PostponeButton, gcp.DismissButton]);
+                    // TODO: radio buttons
+                }
                 if (TryGetAddonMasterIfFocused<GcArmyTraining>(atk, out var gat))
                     DrawEntries(gat.CloseButton);
                 if (TryGetAddonMasterIfFocused<GearSetList>(atk, out var gsl))
@@ -228,7 +234,13 @@ namespace SelectString
                 if (TryGetAddonMasterIfFocused<SalvageResult>(atk, out var sr))
                     DrawEntries(sr.CloseButton);
                 if (TryGetAddonMasterIfFocused<SelectYesno>(atk, out var yn))
-                    DrawEntries([yn.Addon->YesButton, yn.Addon->NoButton]); // TODO: if the third button is present, no becomes wait and the third becomes no
+                {
+                    if (yn.ButtonsVisible == 2)
+                        DrawEntries([yn.Addon->YesButton, yn.Addon->NoButton]);
+                    else
+                        // This ensures that the "no" option is always tied to the same key, for muscle memory
+                        DrawEntries([yn.Addon->YesButton, yn.ThirdButton, yn.Addon->NoButton]);
+                }
                 if (TryGetAddonMasterIfFocused<SelectOk>(atk, out var ok))
                     DrawEntries(ok.Addon->OkButton); // TODO: these have a second button?
                 if (TryGetAddonMasterIfFocused<ShopCardDialog>(atk, out var scd))
@@ -407,18 +419,6 @@ namespace SelectString
             }
             keyWatcher.Enabled = true;
         }
-
-        private void DrawEntries(GcArmyMenberProfile am)
-        {
-            if (am.Addon->AtkValues[18].Bool) // afaik this bool indicates whether the buttons are shown or the radio buttons. Could also be #23 but the value is inverted.
-                DrawEntries([am.QuestionButton, am.PostponeButton, am.DismissButton]);
-            //else
-            //{
-            //    // TODO: get radio buttons working
-            //    // Note: DisplayOrders is sometimes not visible at all, considering shifting all the numbers accordingly
-            //    DrawEntries([am.DisplayOrdersButton, am.ChangeClassButton, am.ConfirmChemistryButton, am.OutfitButton]);
-            //}
-        }
         #endregion
 
         private static string IndexToText(int idx) => $"{(idx == 11 ? "=" : (idx == 10 ? "-" : (idx == 9 ? 0 : idx + 1)))}";
@@ -428,6 +428,18 @@ namespace SelectString
 
         private static bool ButtonActive(AtkComponentRadioButton* btn)
             => btn != null && btn->IsEnabled && btn->OwnerNode->NodeFlags.HasFlag(NodeFlags.Visible);
+
+        private static bool GetNodeVisible(AtkResNode* node)
+        {
+            if (node == null) return false;
+            while (node != null)
+            {
+                if (!node->IsVisible()) return false;
+                node = node->ParentNode;
+            }
+
+            return true;
+        }
 
         private static Vector2 GetNodePosition(AtkResNode* node)
         {
