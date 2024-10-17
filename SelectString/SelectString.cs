@@ -204,7 +204,7 @@ namespace SelectString
                 if (TryGetAddonMasterIfFocused<LotteryWeeklyRewardList>(atk, out var lwrl))
                     DrawEntries(lwrl.CloseButton);
                 if (TryGetAddonMasterIfFocused<ManeuversArmorBoarding>(atk, out var mab))
-                    DrawEntries([mab.CruiseChaserButton, mab.OppressorButton, mab.BruteJusticeButton, mab.MountButton]);
+                    DrawEntries(mab.MountButton); // TODO: individual mount buttons. They behave weirdly
                 if (TryGetAddonMasterIfFocused<ManeuversRecord>(atk, out var mr))
                     DrawEntries(mr.LeaveButton);
                 if (TryGetAddonMasterIfFocused<MateriaAttachDialog>(atk, out var mad))
