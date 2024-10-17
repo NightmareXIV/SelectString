@@ -1,5 +1,4 @@
-﻿using Dalamud.Game.Command;
-using Dalamud.Interface.Utility;
+﻿using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
 using ECommons;
 using ECommons.Automation;
@@ -25,12 +24,13 @@ namespace SelectString
     public unsafe class SelectString : IDalamudPlugin
     {
         public string Name => "SelectString";
-        bool exec = false;
+        bool exec = true;
         static List<(float X, float Y, string Text)> DrawList = [];
         KeyStateWatcher keyWatcher;
-        List<Button> ActiveButtons = [];
         TaskManager TM;
         const int horizontalOffset = 10;
+
+        public static List<Button> ActiveButtons = [];
 
         public SelectString(IDalamudPluginInterface pluginInterface)
         {
@@ -41,8 +41,19 @@ namespace SelectString
             Svc.Framework.Update += Tick;
             KeyStateWatcher.NumKeyPressed += OnNumKeyPress;
             Svc.PluginInterface.UiBuilder.Draw += Draw;
-            Svc.Commands.AddHandler("/ss", new CommandInfo(delegate { Svc.Chat.Print(GetFocusedAddon()->NameString); }));
+            EzCmd.Add("/ss", OnCommand, $"Toggles {Name}");
             SingletonServiceManager.Initialize(typeof(ServiceManager));
+        }
+
+        private void OnCommand(string command, string arguments)
+        {
+            if (arguments.StartsWith('d'))
+            {
+                Svc.Chat.Print(GetFocusedAddon()->NameString);
+                Svc.Chat.Print(string.Join("\n", ActiveButtons.Select(x => x.ToString())));
+            }
+            else
+                exec ^= true;
         }
 
         public void Dispose()
@@ -50,15 +61,14 @@ namespace SelectString
             Svc.Framework.Update -= Tick;
             KeyStateWatcher.NumKeyPressed -= OnNumKeyPress;
             Svc.PluginInterface.UiBuilder.Draw -= Draw;
-            Svc.Commands.RemoveHandler("/ss");
             keyWatcher.Dispose();
             ECommonsMain.Dispose();
         }
 
-        private class Button(AtkComponentButton* btn, Action buttonAction = null)
+        public class Button(AtkComponentButton* btn, Action buttonAction = null)
         {
             public AtkComponentButton* Base => btn;
-            public bool Active => GetNodeVisible(btn->AtkResNode);
+            public bool Active => ButtonActive(btn);
             public Action ClickOverride => buttonAction;
             public string Id => btn->ButtonTextNode->NodeText.ToString();
 
@@ -81,28 +91,30 @@ namespace SelectString
                     ClickOverride();
                     return true;
                 }
-                if (btn->IsEnabled && btn->AtkResNode->IsVisible())
+                else
                 {
                     var adn = GetFocusedAddonFromNode(btn->AtkResNode);
-                    Svc.Log.Info($"Clicking button {Id} on {adn->NameString}");
+                    if (adn == null) return false;
+
+                    Svc.Log.Info($"Clicking {Id}");
                     btn->ClickAddonButton(adn);
                     return true;
                 }
-                return false;
             }
+
+            public override string ToString() => $"{Id}: [A:{Active} C:{(ClickOverride != null ? ClickOverride.Method.Name : "null")} Atk:{GetFocusedAddonFromNode(btn->AtkResNode)->NameString}]";
         }
 
         private void OnNumKeyPress(int idx)
         {
-            Svc.Log.Info($"{idx} pressed. {ActiveButtons.Count}");
+            Svc.Log.Info($"Pressed {idx} out of {ActiveButtons.Count}");
             if (ActiveButtons.Count == 0 || idx >= ActiveButtons.Count) return;
             ActiveButtons[idx].Click();
         }
 
         private void Tick(object framework)
         {
-            /*if (!exec) return;
-            exec = false;*/
+            if (!exec) return;
             DrawList.Clear();
             ActiveButtons.Clear();
             keyWatcher.Enabled = false;
@@ -131,6 +143,8 @@ namespace SelectString
                     DrawEntries(ase.DeployButton);
                 if (TryGetAddonMasterIfFocused<AirShipExplorationResult>(atk, out var aser))
                     DrawEntries([aser.RedeployButton, aser.FinalizeReportButton]);
+                if (TryGetAddonMasterIfFocused<Bank>(atk, out var b))
+                    DrawEntries([b.ProceedButton, b.CancelButton]);
                 if (TryGetAddonMasterIfFocused<CollectablesShop>(atk, out var cs))
                     DrawEntries(cs.TradeButton);
                 if (TryGetAddonMasterIfFocused<ColorantColoring>(atk, out var cc))
@@ -165,6 +179,8 @@ namespace SelectString
                     DrawEntries([iir.NextButton, iir.CloseButton]);
                 if (TryGetAddonMasterIfFocused<InputNumeric>(atk, out var inu))
                     DrawEntries([inu.OkButton, inu.CancelButton]);
+                if (TryGetAddonMasterIfFocused<ItemFinder>(atk, out var ifr))
+                    DrawEntries(ifr.CloseButton);
                 if (TryGetAddonMasterIfFocused<JournalDetail>(atk, out var jd))
                     DrawEntries([jd.Addon->AcceptMapButton, jd.Addon->InitiateButton, jd.Addon->AbandonDeclineButton]);
                 if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
@@ -222,7 +238,7 @@ namespace SelectString
                 if (TryGetAddonMasterIfFocused<RetainerItemTransferProgress>(atk, out var ritp))
                     DrawEntries(ritp.Addon->CloseWindowButton);
                 if (TryGetAddonMasterIfFocused<RetainerSell>(atk, out var rs))
-                    DrawEntries([rs.ConfirmButton, rs.CancelButton, rs.ComparePricesButton]);
+                    DrawEntries([rs.ConfirmButton, rs.CancelButton]);
                 if (TryGetAddonMasterIfFocused<RetainerTaskAsk>(atk, out var rta))
                     DrawEntries([rta.AssignButton, rta.ReturnButton]);
                 if (TryGetAddonMasterIfFocused<RetainerTaskResult>(atk, out var rtr))
@@ -320,14 +336,10 @@ namespace SelectString
             ActiveButtons.Clear();
             if (am.Base->UldManager.NodeListCount < 3) return;
 
-            var listNode = am.Base->UldManager.NodeList[2];
-            var textNode = (AtkTextNode*)am.Base->UldManager.NodeList[3];
-            for (ushort i = 0; i < Math.Min(am.Addon->PopupMenu.PopupMenu.EntryCount, 12); i++)
+            for (ushort i = 0; i < Math.Min(am.EntryCount, 12); i++)
             {
-                var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
-                var itemText = listComponent->GetComponent()->UldManager.NodeList[3]->GetAsAtkTextNode()->AtkResNode;
                 ActiveButtons.Add(new(null, am.Entries[i].Select));
-                ActiveButtons[i].DrawKey(i, &itemText);
+                ActiveButtons[i].DrawKey(i, &am.Entries[i].TextNode->AtkResNode);
             }
             keyWatcher.Enabled = true;
         }
@@ -337,14 +349,10 @@ namespace SelectString
             ActiveButtons.Clear();
             if (am.Base->UldManager.NodeListCount < 3) return;
 
-            var listNode = am.Base->UldManager.NodeList[2];
-            var textNode = (AtkTextNode*)am.Base->UldManager.NodeList[3];
-            for (ushort i = 0; i < Math.Min(am.Addon->PopupMenu.PopupMenu.EntryCount, 12); i++)
+            for (ushort i = 0; i < Math.Min(am.EntryCount, 12); i++)
             {
-                var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
-                var itemText = listComponent->GetComponent()->UldManager.NodeList[3]->GetAsAtkTextNode()->AtkResNode;
                 ActiveButtons.Add(new(null, am.Entries[i].Select));
-                ActiveButtons[i].DrawKey(i, &itemText);
+                ActiveButtons[i].DrawKey(i, &am.Entries[i].TextNode->AtkResNode);
             }
             keyWatcher.Enabled = true;
         }
@@ -352,19 +360,14 @@ namespace SelectString
         private void DrawEntries(ContextMenu am)
         {
             ActiveButtons.Clear();
-            if (am.Base->AtkValuesCount <= 7) return;
+            if (am.EntriesCount < 1) return;
 
-            var listNode = am.Base->UldManager.NodeList[2];
-            for (ushort i = 0; i < Math.Min(am.Entries.Length, 12); i++)
+            for (ushort i = 0; i < Math.Min(am.EntriesCount, 12); i++)
             {
-                var entry = am.Entries[i];
-                if (!entry.IsNativeEntry) continue;
-
-                var listComponent = ((AtkComponentNode*)listNode)->Component->UldManager.NodeList[i + 1];
-                var itemText = listComponent->GetComponent()->UldManager.NodeList[6]->GetAsAtkTextNode()->AtkResNode;
+                if (!am.Entries[i].IsNativeEntry) continue;
                 var idx = i;
                 ActiveButtons.Add(new(null, () => am.Entries[idx].Select()));
-                ActiveButtons[i].DrawKey(i, &itemText);
+                ActiveButtons[i].DrawKey(i, &am.Entries[idx].TextNode->AtkResNode);
             }
             keyWatcher.Enabled = true;
         }
@@ -378,10 +381,9 @@ namespace SelectString
                 if (btn.Active)
                     btn.DrawKey(ActiveButtons.IndexOf(btn));
 
-            var slot = am.FirstUnfilledSlot;
-            if (slot != null && am.SlotsFilled.Count < am.RequestedItemNumberAvailable)
+            if (am.FirstUnfilledSlot != null && am.SlotsFilled.Count < am.RequestedItemNumberAvailable)
             {
-                ActiveButtons.Add(new(null, () => TM.Enqueue(() => am.TryHandOver(slot.Value))));
+                ActiveButtons.Add(new(null, () => TM.Enqueue(() => am.TryHandOver(am.FirstUnfilledSlot.Value))));
                 ActiveButtons.Last().DrawKey(ActiveButtons.Count - 1, &am.Addon->GetComponentNodeById(50)->AtkResNode);
             }
             keyWatcher.Enabled = true;
@@ -424,10 +426,10 @@ namespace SelectString
         private static string IndexToText(int idx) => $"{(idx == 11 ? "=" : (idx == 10 ? "-" : (idx == 9 ? 0 : idx + 1)))}";
 
         private static bool ButtonActive(AtkComponentButton* btn)
-            => btn != null && btn->IsEnabled && btn->OwnerNode->NodeFlags.HasFlag(NodeFlags.Visible);
+            => btn != null && btn->IsEnabled && GetNodeVisible(btn->AtkResNode);
 
         private static bool ButtonActive(AtkComponentRadioButton* btn)
-            => btn != null && btn->IsEnabled && btn->OwnerNode->NodeFlags.HasFlag(NodeFlags.Visible);
+            => btn != null && btn->IsEnabled && GetNodeVisible(btn->AtkResNode);
 
         private static bool GetNodeVisible(AtkResNode* node)
         {

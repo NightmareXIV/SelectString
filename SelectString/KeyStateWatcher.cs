@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 
 namespace SelectString;
-public unsafe class KeyStateWatcher : IDisposable
+public unsafe class KeyStateWatcher() : IDisposable
 {
     public bool Enabled
     {
@@ -23,7 +23,7 @@ public unsafe class KeyStateWatcher : IDisposable
     private void CheckKeyStates(IFramework framework)
     {
         if (RaptureAtkModule.Instance()->AtkModule.IsTextInputActive()) return;
-        for (var i = 0; i < 11; i++)
+        for (var i = 0; i < Math.Min(SelectString.ActiveButtons.Count, 11); i++)
         {
             if (i < 10)
             {
