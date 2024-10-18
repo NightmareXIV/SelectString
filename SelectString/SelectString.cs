@@ -4,6 +4,7 @@ using ECommons;
 using ECommons.Automation;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
+using ECommons.Logging;
 using ECommons.Singletons;
 using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -87,7 +88,7 @@ namespace SelectString
             {
                 if (ClickOverride != null)
                 {
-                    Svc.Log.Info($"Performing {ClickOverride.Method.Name}");
+                    PluginLog.Debug($"Performing {ClickOverride.Method.Name}");
                     ClickOverride();
                     return true;
                 }
@@ -96,7 +97,7 @@ namespace SelectString
                     var adn = GetFocusedAddonFromNode(btn->AtkResNode);
                     if (adn == null) return false;
 
-                    Svc.Log.Info($"Clicking {Id}");
+                    PluginLog.Debug($"Clicking {Id}");
                     btn->ClickAddonButton(adn);
                     return true;
                 }
@@ -107,8 +108,8 @@ namespace SelectString
 
         private void OnNumKeyPress(int idx)
         {
-            Svc.Log.Info($"Pressed {idx} out of {ActiveButtons.Count}");
             if (ActiveButtons.Count == 0 || idx >= ActiveButtons.Count) return;
+            PluginLog.Verbose($"Pressed {idx} out of {ActiveButtons.Count}");
             ActiveButtons[idx].Click();
         }
 
@@ -284,7 +285,7 @@ namespace SelectString
             }
             catch (Exception e)
             {
-                Svc.Log.Error(e.Message + "\n" + e.StackTrace);
+                PluginLog.Error(e.Message + "\n" + e.StackTrace);
             }
         }
 
