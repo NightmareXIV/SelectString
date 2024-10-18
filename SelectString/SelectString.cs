@@ -238,8 +238,9 @@ namespace SelectString
                     DrawEntries([ritl.Addon->ConfirmButton, ritl.Addon->CancelButton]);
                 if (TryGetAddonMasterIfFocused<RetainerItemTransferProgress>(atk, out var ritp))
                     DrawEntries(ritp.Addon->CloseWindowButton);
-                if (TryGetAddonMasterIfFocused<RetainerSell>(atk, out var rs))
-                    DrawEntries([rs.ConfirmButton, rs.CancelButton]);
+                // TODO: check the confirm button
+                //if (TryGetAddonMasterIfFocused<RetainerSell>(atk, out var rs))
+                //    DrawEntries([rs.ConfirmButton, rs.CancelButton]);
                 if (TryGetAddonMasterIfFocused<RetainerTaskAsk>(atk, out var rta))
                     DrawEntries([rta.AssignButton, rta.ReturnButton]);
                 if (TryGetAddonMasterIfFocused<RetainerTaskResult>(atk, out var rtr))
