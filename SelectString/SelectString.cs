@@ -472,14 +472,12 @@ namespace SelectString
             return false;
         }
 
+        private static string LastFocusedAddon = string.Empty;
         /// <summary>
-        /// Gets the addon that is currently focused OR, if FocusedUnitsList has one entry, that
+        /// Gets the addon that is currently focused
         /// </summary>
         private static AtkUnitBase* GetFocusedAddon()
         {
-            if (RaptureAtkUnitManager.Instance()->FocusedUnitsList.Count == 1)
-                return RaptureAtkUnitManager.Instance()->FocusedUnitsList.Entries[0].Value;
-
             var focus = AtkStage.Instance()->GetFocus();
             if (focus == null) return null;
             for (var i = 0; i < RaptureAtkUnitManager.Instance()->FocusedUnitsList.Count; i++)
