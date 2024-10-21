@@ -50,7 +50,7 @@ namespace SelectString
         {
             if (arguments.StartsWith('d'))
             {
-                Svc.Chat.Print(GetFocusedAddon()->NameString);
+                Svc.Chat.Print(GetFocusedAddonOrLast()->NameString);
                 Svc.Chat.Print(string.Join("\n", ActiveButtons.Select(x => x.ToString())));
             }
             else
@@ -94,8 +94,12 @@ namespace SelectString
                 }
                 else
                 {
-                    var adn = GetFocusedAddonFromNode(btn->AtkResNode);
-                    if (adn == null) return false;
+                    var adn = GetAddonFromNode(btn->AtkResNode);
+                    if (adn == null)
+                    {
+                        PluginLog.Error("Failed to find addon from button.");
+                        return false;
+                    }
 
                     PluginLog.Debug($"Clicking {Id}");
                     btn->ClickAddonButton(adn);
@@ -103,7 +107,7 @@ namespace SelectString
                 }
             }
 
-            public override string ToString() => $"{Id}: [A:{Active} C:{(ClickOverride != null ? ClickOverride.Method.Name : "null")} Atk:{GetFocusedAddonFromNode(btn->AtkResNode)->NameString}]";
+            public override string ToString() => $"{Id}: [A:{Active} C:{(ClickOverride != null ? ClickOverride.Method.Name : "null")} Atk:{GetAddonFromNode(btn->AtkResNode)->NameString}]";
         }
 
         private void OnNumKeyPress(int idx)
@@ -121,7 +125,7 @@ namespace SelectString
             keyWatcher.Enabled = false;
             try
             {
-                var atk = GetFocusedAddon();
+                var atk = GetFocusedAddonOrLast();
                 if (atk == null || !IsAddonReady(atk)) return;
                 // requires special handling
                 if (TryGetAddonMasterIfFocused<AddonMaster.SelectString>(atk, out var ss))
@@ -473,12 +477,17 @@ namespace SelectString
         }
 
         /// <summary>
-        /// Gets the addon that is currently focused
+        /// Gets the addon that is currently focused, or the last if none are focused
         /// </summary>
-        private static AtkUnitBase* GetFocusedAddon()
+        private static AtkUnitBase* GetFocusedAddonOrLast()
         {
             var focus = AtkStage.Instance()->GetFocus();
-            if (focus == null) return null; // TODO: check loaded units for the last addon that was focused and return it if it's still loaded
+            if (focus == null)
+            {
+                // this checks for any addons that aren't one of the always loaded types as a fallback (in case you clicked off of the focused addon)
+                var atk = RaptureAtkUnitManager.Instance()->AllLoadedUnitsList.Entries.ToArray().LastOrDefault(x => x.Value != null && (x.Value->Flags198 & 0b1100_0000) == 0 && x.Value->HostId == 0, null);
+                return atk.Value;
+            }
             for (var i = 0; i < RaptureAtkUnitManager.Instance()->FocusedUnitsList.Count; i++)
             {
                 var atk = RaptureAtkUnitManager.Instance()->FocusedUnitsList.Entries[i].Value;
@@ -494,12 +503,13 @@ namespace SelectString
             return null;
         }
 
-        private static AtkUnitBase* GetFocusedAddonFromNode(AtkResNode* node)
+        private static AtkUnitBase* GetAddonFromNode(AtkResNode* node)
         {
-            for (var i = 0; i < RaptureAtkUnitManager.Instance()->FocusedUnitsList.Count; i++)
+            for (var i = 0; i < RaptureAtkUnitManager.Instance()->AllLoadedUnitsList.Count; i++)
             {
-                var atk = RaptureAtkUnitManager.Instance()->FocusedUnitsList.Entries[i].Value;
-                if (atk != null && atk->RootNode == GetRootNode(node))
+                var atk = RaptureAtkUnitManager.Instance()->AllLoadedUnitsList.Entries[i].Value;
+                if (atk == null || (atk->Flags198 & 0b1100_0000) != 0 || atk->HostId != 0) continue;
+                if (atk->RootNode == GetRootNode(node))
                     return atk;
             }
             return null;
