@@ -1,4 +1,5 @@
 ﻿using ECommons;
+using ECommons.Configuration;
 using ECommons.DalamudServices;
 using ECommons.ImGuiMethods;
 using ECommons.SimpleGui;
@@ -19,8 +20,18 @@ public class ConfigWindow : ECommons.SimpleGui.ConfigWindow
         Svc.PluginInterface.UiBuilder.OpenConfigUi += EzConfigGui.Open;
     }
 
+    public override void OnClose()
+    {
+        EzConfig.Save();
+    }
+
     public override void Draw()
     {
+        ImGuiEx.TextWrapped($"Enable SelectString for these windows:");
+        foreach(var x in StaticData.AddonMasterOpts)
+        {
+            ImGuiEx.CollectionCheckbox(StaticData.GetAddonMasterName(x), x.Name, C.DisabledAddons, true);
+        }
         if(ImGui.CollapsingHeader("Debug"))
         {
             if(GenericHelpers.TryGetAddonMaster<AddonMaster.ContextMenu>(out var m) && m.IsAddonReady)
