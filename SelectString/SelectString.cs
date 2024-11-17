@@ -74,7 +74,15 @@ public unsafe class SelectString : IDalamudPlugin
         public AtkComponentButton* Base => btn;
         public bool Active => ButtonActive(btn);
         public Action ClickOverride => buttonAction;
-        public string Id => btn->ButtonTextNode->NodeText.ToString();
+        public string Id
+        {
+            get
+            {
+                if (btn->ButtonTextNode == null || btn->ButtonTextNode->NodeText.Length == 0)
+                    return $"[{GetAddonFromNode(btn->AtkResNode)->NameString}:x{btn->AtkResNode->X}/y{btn->AtkResNode->Y}/w{btn->AtkResNode->Width}/h{btn->AtkResNode->Height}]";
+                return btn->ButtonTextNode->NodeText.ToString();
+            }
+        }
 
         public void DrawKey(int idx, AtkResNode* drawNodeOverride = null)
         {
@@ -153,6 +161,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([aser.RedeployButton, aser.FinalizeReportButton]);
             if (TryGetAddonMasterIfFocused<Bank>(atk, out var b))
                 DrawEntries([b.ProceedButton, b.CancelButton]);
+            if (TryGetAddonMasterIfFocused<BannerMIP>(atk, out var bmip))
+                DrawEntries([bmip.OkButton, bmip.CancelButton]);
             if (TryGetAddonMasterIfFocused<CollectablesShop>(atk, out var cs))
                 DrawEntries(cs.TradeButton);
             if (TryGetAddonMasterIfFocused<ColorantColoring>(atk, out var cc))
@@ -163,6 +173,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(ccs.CloseButton);
             if (TryGetAddonMasterIfFocused<ContentsFinderSetting>(atk, out var cfs))
                 DrawEntries([cfs.ConfirmButton, cfs.CloseButton]);
+            if (TryGetAddonMasterIfFocused<ContentsFinderStatus>(atk, out var cfs2))
+                DrawEntries(cfs2.WithdrawButton);
             if (TryGetAddonMasterIfFocused<Dialogue>(atk, out var d))
                 DrawEntries([d.OkButton]);
             if (TryGetAddonMasterIfFocused<DifficultySelectYesNo>(atk, out var dyn))
@@ -183,6 +195,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(gat.CloseButton);
             if (TryGetAddonMasterIfFocused<GearSetList>(atk, out var gsl))
                 DrawEntries(gsl.EquipSetButton);
+            if (TryGetAddonMasterIfFocused<ItemDetailCompare>(atk, out var idc))
+                DrawEntries(idc.CloseButton);
             if (TryGetAddonMasterIfFocused<ItemInspectionResult>(atk, out var iir))
                 DrawEntries([iir.NextButton, iir.CloseButton]);
             if (TryGetAddonMasterIfFocused<InputNumeric>(atk, out var inu))
@@ -225,6 +239,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([mpe.CastButton, mpe.ReturnButton]);
             if (TryGetAddonMasterIfFocused<MiragePrismRemove>(atk, out var mpr))
                 DrawEntries([mpr.DispelButton, mpr.ReturnButton]);
+            if (TryGetAddonMasterIfFocused<MJIRecipeNoteBook>(atk, out var mjirn))
+                DrawEntries(mjirn.CraftButton);
             if (TryGetAddonMasterIfFocused<PurifyAutoDialog>(atk, out var pad))
                 DrawEntries(pad.CancelExitButton);
             if (TryGetAddonMasterIfFocused<PurifyResult>(atk, out var pr))
@@ -274,6 +290,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([secd.ExchangeButton, secd.CancelButton]);
             if (TryGetAddonMasterIfFocused<ShopExchangeItemDialog>(atk, out var seid))
                 DrawEntries([seid.ExchangeButton, seid.CancelButton]);
+            if (TryGetAddonMasterIfFocused<SynthesisSimpleDialog>(atk, out var ssd))
+                DrawEntries([ssd.SynthesizeButton, ssd.CancelButton]);
             if (TryGetAddonMasterIfFocused<TripleTriadRequest>(atk, out var ttr))
                 DrawEntries([ttr.ChallengeButton, ttr.QuitButton]);
             if (TryGetAddonMasterIfFocused<TripleTriadResult>(atk, out var ttrr))
@@ -470,7 +488,7 @@ public unsafe class SelectString : IDalamudPlugin
 
     public static bool TryGetAddonMasterIfFocused<T>(AtkUnitBase* atk, out T addonMaster) where T : IAddonMasterBase
     {
-        if(C.DisabledAddons.Contains(typeof(T).Name))
+        if (C.DisabledAddons.Contains(typeof(T).Name))
         {
             addonMaster = default;
             return false;
@@ -501,8 +519,8 @@ public unsafe class SelectString : IDalamudPlugin
             var atk = RaptureAtkUnitManager.Instance()->FocusedUnitsList.Entries[i].Value;
             if (atk != null && atk->RootNode == GetRootNode(focus))
             {
-                // JournalDetail is never in focus when brought up, but is always up when Journal is, which we don't care about so just return JD
-                if (TryGetAddonByName<AtkUnitBase>("Journal", out var addon) && addon == atk)
+                // JournalDetail is never in focus when brought up, but is always up when Journal/GuildLeve is, which we don't care about so just return JD
+                if ((TryGetAddonByName<AtkUnitBase>("Journal", out var addon) && addon == atk) || (TryGetAddonByName<AtkUnitBase>("GuildLeve", out addon) && addon == atk))
                     return (AtkUnitBase*)Svc.GameGui.GetAddonByName("JournalDetail");
                 else
                     return atk;
