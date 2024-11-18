@@ -280,8 +280,10 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([ttrr.RematchButton, ttrr.QuitButton]);
             if (TryGetAddonMasterIfFocused<VoteMvp>(atk, out var vm))
                 DrawEntries([vm.OkButton, vm.CancelButton]);
-            if (TryGetAddonMasterIfFocused<WeeklyBingoResult>(atk, out var wbr))
+            if(TryGetAddonMasterIfFocused<WeeklyBingoResult>(atk, out var wbr))
                 DrawEntries([wbr.AcceptButton, wbr.CancelButton]);
+            if(TryGetAddonMasterIfFocused<MiragePrismMiragePlateConfirm>(atk, out var miragePrismMiragePlateConfirm))
+                DrawEntries([miragePrismMiragePlateConfirm.YesButton, miragePrismMiragePlateConfirm.NoButton]);
 
             // generic callback addons
             if (TryGetAddonByName<AtkUnitBase>("FrontlineRecord", out var fl) && IsAddonReady(fl))

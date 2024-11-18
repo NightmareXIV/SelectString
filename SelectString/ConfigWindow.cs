@@ -25,11 +25,16 @@ public class ConfigWindow : ECommons.SimpleGui.ConfigWindow
         EzConfig.Save();
     }
 
+    string Filter = "";
     public override void Draw()
     {
         ImGuiEx.TextWrapped($"Enable SelectString for these windows:");
-        foreach(var x in StaticData.AddonMasterOpts)
+        ImGui.Indent();
+        ImGuiEx.SetNextItemFullWidth();
+        ImGui.InputTextWithHint($"##fltr", "Search...", ref Filter, 50);
+        foreach(var x in StaticData.AddonMasterOpts.OrderBy(StaticData.GetAddonMasterName))
         {
+            if(Filter.Length > 0 && !StaticData.GetAddonMasterName(x).Contains(Filter, StringComparison.OrdinalIgnoreCase)) continue;
             ImGuiEx.CollectionCheckbox(StaticData.GetAddonMasterName(x), x.Name, C.DisabledAddons, true);
         }
         if(ImGui.CollapsingHeader("Debug"))
@@ -42,5 +47,6 @@ public class ConfigWindow : ECommons.SimpleGui.ConfigWindow
                 }
             }
         }
+        ImGui.Unindent();
     }
 }
