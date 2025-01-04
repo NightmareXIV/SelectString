@@ -151,6 +151,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(cslm);
             if (TryGetAddonMasterIfFocused<BankaCraftworksSupply>(atk, out var bcs))
                 DrawEntries(bcs);
+            if (TryGetAddonMasterIfFocused<MiragePrismPrismSetConvert>(atk, out var mpcs))
+                DrawEntries(mpcs);
 
             // generic button addons
             if (TryGetAddonMasterIfFocused<_TitleMenu>(atk, out var tm))
@@ -163,6 +165,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([b.ProceedButton, b.CancelButton]);
             if (TryGetAddonMasterIfFocused<BannerMIP>(atk, out var bmip))
                 DrawEntries([bmip.OkButton, bmip.CancelButton]);
+            if (TryGetAddonMasterIfFocused<BannerPreview>(atk, out var bp))
+                DrawEntries([bp.UpdateButton, bp.CancelButton]);
             if (TryGetAddonMasterIfFocused<CollectablesShop>(atk, out var cs))
                 DrawEntries(cs.TradeButton);
             if (TryGetAddonMasterIfFocused<ColorantColoring>(atk, out var cc))
@@ -203,6 +207,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([inu.OkButton, inu.CancelButton]);
             if (TryGetAddonMasterIfFocused<ItemFinder>(atk, out var ifr))
                 DrawEntries(ifr.CloseButton);
+            if (TryGetAddonMasterIfFocused<JournalAccept>(atk, out var ja))
+                DrawEntries([ja.AcceptButton, ja.DeclineButton]);
             if (TryGetAddonMasterIfFocused<JournalDetail>(atk, out var jd))
                 DrawEntries([jd.Addon->AcceptMapButton, jd.Addon->InitiateButton, jd.Addon->AbandonDeclineButton]);
             if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
@@ -239,6 +245,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries([mpe.CastButton, mpe.ReturnButton]);
             if (TryGetAddonMasterIfFocused<MiragePrismRemove>(atk, out var mpr))
                 DrawEntries([mpr.DispelButton, mpr.ReturnButton]);
+            if (TryGetAddonMasterIfFocused<MiragePrismPrismSetConvertC>(atk, out var mpcsc))
+                DrawEntries([mpcsc.YesButton, mpcsc.NoButton]);
             if (TryGetAddonMasterIfFocused<MJIRecipeNoteBook>(atk, out var mjirn))
                 DrawEntries(mjirn.CraftButton);
             if (TryGetAddonMasterIfFocused<PurifyAutoDialog>(atk, out var pad))
@@ -274,6 +282,8 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(sad.EndDesynthesisButton);
             if (TryGetAddonMasterIfFocused<SalvageResult>(atk, out var sr))
                 DrawEntries(sr.CloseButton);
+            if (TryGetAddonMasterIfFocused<SatisfactionSupplyResult>(atk, out var ssr))
+                DrawEntries(ssr.AcceptButton);
             if (TryGetAddonMasterIfFocused<SelectYesno>(atk, out var yn))
             {
                 if (yn.ButtonsVisible == 2)
@@ -418,10 +428,27 @@ public unsafe class SelectString : IDalamudPlugin
         keyWatcher.Enabled = true;
     }
 
+    private void DrawEntries(MiragePrismPrismSetConvert am)
+    {
+        ActiveButtons.Clear();
+
+        ActiveButtons.AddRange([new(am.StoreAsGlamourButton), new(am.CloseButton)]);
+        foreach (var btn in ActiveButtons)
+            if (btn.Active)
+                btn.DrawKey(ActiveButtons.IndexOf(btn));
+
+        if (am.FirstUnfilledSlot != null && am.SlotsFilled.Count < am.Items.Length)
+        {
+            ActiveButtons.Add(new(null, () => TM.Enqueue(() => am.TryHandOver(am.FirstUnfilledSlot.Value))));
+            ActiveButtons.Last().DrawKey(ActiveButtons.Count - 1, am.Addon->GetButtonNodeById(14)->AtkResNode);
+        }
+        keyWatcher.Enabled = true;
+    }
+
     private void DrawEntries(_CharaSelectListMenu am)
     {
         ActiveButtons.Clear();
-        var list = am.Addon->GetComponentListById(13);
+        var list = am.Addon->GetComponentListById(12);
         foreach (var node in Enumerable.Range(0, list->GetItemCount()))
         {
             var item = list->GetItemRenderer(node);
