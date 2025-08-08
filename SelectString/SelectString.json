@@ -7,5 +7,5 @@
   "LoadPriority": 0,
   "InternalName": "SelectString",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 12
+    "DalamudApiLevel": 13
 }

@@ -13,7 +13,7 @@ using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.Interop;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SelectString.Services;
 using System;
 using System.Collections.Generic;
