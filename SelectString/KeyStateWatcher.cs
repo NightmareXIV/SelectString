@@ -1,5 +1,6 @@
 ﻿using Dalamud.Plugin.Services;
 using ECommons.DalamudServices;
+using ECommons.Logging;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 
@@ -23,7 +24,7 @@ public unsafe class KeyStateWatcher() : IDisposable
     private void CheckKeyStates(IFramework framework)
     {
         if (RaptureAtkModule.Instance()->AtkModule.IsTextInputActive()) return;
-        for (var i = 0; i < Math.Min(SelectString.ActiveButtons.Count, 11); i++)
+        for (var i = 0; i < Math.Min(SelectString.ActiveButtons.Count, 12); i++)
         {
             if (i < 10)
             {
