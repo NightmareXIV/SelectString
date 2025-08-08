@@ -1,10 +1,10 @@
-﻿using ECommons;
+﻿using Dalamud.Bindings.ImGui;
+using ECommons;
 using ECommons.Configuration;
 using ECommons.DalamudServices;
 using ECommons.ImGuiMethods;
 using ECommons.SimpleGui;
 using ECommons.UIHelpers.AddonMasterImplementations;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -22,6 +22,7 @@ using System.Numerics;
 using static ECommons.Automation.UIInput.ClickHelperExtensions;
 using static ECommons.GenericHelpers;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
+using Callback = ECommons.Automation.Callback;
 
 namespace SelectString;
 
@@ -441,7 +442,7 @@ public unsafe class SelectString : IDalamudPlugin
         if (am.FirstUnfilledSlot != null && am.SlotsFilled.Count < am.Items.Length)
         {
             ActiveButtons.Add(new(null, () => TM.Enqueue(() => am.TryHandOver(am.FirstUnfilledSlot.Value))));
-            ActiveButtons.Last().DrawKey(ActiveButtons.Count - 1, am.Addon->GetButtonNodeById(14)->AtkResNode);
+            ActiveButtons.Last().DrawKey(ActiveButtons.Count - 1, am.Addon->GetComponentButtonById(14)->AtkResNode);
         }
         keyWatcher.Enabled = true;
     }
@@ -551,7 +552,7 @@ public unsafe class SelectString : IDalamudPlugin
             {
                 // JournalDetail is never in focus when brought up, but is always up when Journal/GuildLeve is, which we don't care about so just return JD
                 if ((TryGetAddonByName<AtkUnitBase>("Journal", out var addon) && addon == atk) || (TryGetAddonByName<AtkUnitBase>("GuildLeve", out addon) && addon == atk))
-                    return (AtkUnitBase*)Svc.GameGui.GetAddonByName("JournalDetail");
+                    return (AtkUnitBase*)Svc.GameGui.GetAddonByName("JournalDetail").Address;
                 else
                     return atk;
             }
