@@ -71,7 +71,7 @@ public unsafe class SelectString : IDalamudPlugin
         ECommonsMain.Dispose();
     }
 
-    public class Button(AtkComponentButton* btn, Action buttonAction = null)
+    public class Button(AtkComponentButton* btn, Action buttonAction = null, AtkUnitBase* addon = null)
     {
         public AtkComponentButton* Base => btn;
         public bool Active => ButtonActive(btn);
@@ -107,11 +107,15 @@ public unsafe class SelectString : IDalamudPlugin
             }
             else
             {
-                var adn = GetAddonFromNode(btn->AtkResNode);
-                if (adn == null)
+                AtkUnitBase* adn = addon;
+                if(adn == null)
                 {
-                    PluginLog.Error("Failed to find addon from button.");
-                    return false;
+                    adn = GetAddonFromNode(btn->AtkResNode);
+                    if(adn == null)
+                    {
+                        PluginLog.Error("Failed to find addon from button.");
+                        return false;
+                    }
                 }
 
                 PluginLog.Debug($"Clicking {Id}");
@@ -212,7 +216,7 @@ public unsafe class SelectString : IDalamudPlugin
             if (TryGetAddonMasterIfFocused<JournalAccept>(atk, out var ja))
                 DrawEntries([ja.AcceptButton, ja.DeclineButton]);
             if (TryGetAddonMasterIfFocused<JournalDetail>(atk, out var jd))
-                DrawEntries([jd.Addon->AcceptMapButton, jd.Addon->InitiateButton, jd.Addon->AbandonDeclineButton]);
+                DrawEntries([jd.Addon->AcceptMapButton, jd.Addon->InitiateButton, jd.Addon->AbandonDeclineButton], addon:jd.Base);
             if (TryGetAddonMasterIfFocused<JournalResult>(atk, out var jr))
                 DrawEntries([jr.Addon->CompleteButton, jr.Addon->DeclineButton]);
             if (TryGetAddonMasterIfFocused<LetterHistory>(atk, out var lh))
@@ -349,10 +353,10 @@ public unsafe class SelectString : IDalamudPlugin
 
     #region Generic Draws
     private void DrawEntries(AtkComponentButton* btn) => DrawEntries([btn]);
-    private void DrawEntries(List<Pointer<AtkComponentButton>> btns)
+    private void DrawEntries(List<Pointer<AtkComponentButton>> btns, AtkUnitBase* addon = null)
     {
         ActiveButtons.Clear();
-        btns.ForEach(x => ActiveButtons.Add(new(x)));
+        btns.ForEach(x => ActiveButtons.Add(new(x, addon:addon)));
         foreach (var btn in ActiveButtons)
             if (btn.Active)
                 btn.DrawKey(ActiveButtons.IndexOf(btn));
