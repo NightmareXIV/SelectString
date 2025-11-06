@@ -10,4 +10,5 @@ namespace SelectString;
 public class Config : IEzConfig
 {
     public List<string> DisabledAddons = [];
+    public bool NoRaise = true;
 }

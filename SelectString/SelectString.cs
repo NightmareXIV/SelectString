@@ -23,6 +23,7 @@ using static ECommons.Automation.UIInput.ClickHelperExtensions;
 using static ECommons.GenericHelpers;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 using Callback = ECommons.Automation.Callback;
+using ECommons.GameHelpers;
 
 namespace SelectString;
 
@@ -118,9 +119,13 @@ public unsafe class SelectString : IDalamudPlugin
                     }
                 }
 
-                PluginLog.Debug($"Clicking {Id}");
-                btn->ClickAddonButton(adn);
-                return true;
+                if(btn->GetComponentType() != ComponentType.HoldButton)
+                {
+                    PluginLog.Debug($"Clicking {Id}");
+                    btn->ClickAddonButton(adn);
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -292,11 +297,18 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(ssr.AcceptButton);
             if (TryGetAddonMasterIfFocused<SelectYesno>(atk, out var yn))
             {
-                if (yn.ButtonsVisible == 2)
-                    DrawEntries([yn.Addon->YesButton, yn.Addon->NoButton]);
-                else
-                    // This ensures that the "no" option is always tied to the same key, for muscle memory
-                    DrawEntries([yn.Addon->YesButton, yn.ThirdButton, yn.Addon->NoButton]);
+                if(!(C.NoRaise && Player.Available && Player.Status.Any(s => s.StatusId.EqualsAny(148u, 1140u))))
+                {
+                    if(yn.ButtonsVisible == 2)
+                    {
+                        DrawEntries([yn.Addon->YesButton, yn.Addon->NoButton]);
+                    }
+                    else
+                    {
+                        // This ensures that the "no" option is always tied to the same key, for muscle memory
+                        DrawEntries([yn.Addon->YesButton, yn.ThirdButton, yn.Addon->NoButton]);
+                    }
+                }
             }
             if (TryGetAddonMasterIfFocused<SelectOk>(atk, out var ok))
                 DrawEntries(ok.Addon->OkButton); // TODO: these have a second button?
@@ -357,9 +369,13 @@ public unsafe class SelectString : IDalamudPlugin
     {
         ActiveButtons.Clear();
         btns.ForEach(x => ActiveButtons.Add(new(x, addon:addon)));
-        foreach (var btn in ActiveButtons)
-            if (btn.Active)
+        foreach(var btn in ActiveButtons)
+        {
+            if(btn.Active)
+            {
                 btn.DrawKey(ActiveButtons.IndexOf(btn));
+            }
+        }
         keyWatcher.Enabled = true;
     }
 
@@ -488,7 +504,7 @@ public unsafe class SelectString : IDalamudPlugin
     private static string IndexToText(int idx) => $"{(idx == 11 ? "=" : (idx == 10 ? "-" : (idx == 9 ? 0 : idx + 1)))}";
 
     private static bool ButtonActive(AtkComponentButton* btn)
-        => btn != null && btn->IsEnabled && GetNodeVisible(btn->AtkResNode);
+        => btn != null && btn->IsEnabled && GetNodeVisible(btn->AtkResNode) && btn->GetComponentType() != ComponentType.HoldButton;
 
     private static bool ButtonActive(AtkComponentRadioButton* btn)
         => btn != null && btn->IsEnabled && GetNodeVisible(btn->AtkResNode);

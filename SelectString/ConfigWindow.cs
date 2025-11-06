@@ -28,6 +28,7 @@ public class ConfigWindow : ECommons.SimpleGui.ConfigWindow
     string Filter = "";
     public override void Draw()
     {
+        ImGui.Checkbox("Disable when Raise active", ref C.NoRaise);
         ImGuiEx.TextWrapped($"Enable SelectString for these windows:");
         ImGui.Indent();
         ImGuiEx.SetNextItemFullWidth();
