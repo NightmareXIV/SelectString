@@ -164,12 +164,16 @@ public unsafe class SelectString : IDalamudPlugin
                 DrawEntries(bcs);
             if (TryGetAddonMasterIfFocused<MiragePrismPrismSetConvert>(atk, out var mpcs))
                 DrawEntries(mpcs);
+            //if (TryGetAddonMasterIfFocused<SubmarineExplorationMapSelect>(atk, out var sems))
+            //    DrawEntries(sems);
 
             // generic button addons
             if (TryGetAddonMasterIfFocused<_TitleMenu>(atk, out var tm))
                 DrawEntries([tm.StartButton, tm.DataCenterButton, tm.MoviesAndTitlesButton, tm.OptionsButton, tm.LicenseButton, tm.ExitButton]);
             if (TryGetAddonMasterIfFocused<AirShipExploration>(atk, out var ase))
                 DrawEntries(ase.DeployButton);
+            if (TryGetAddonMasterIfFocused<AirShipExplorationDetail>(atk, out var ased))
+                DrawEntries([ased.DeployButton, ased.CancelButton]);
             if (TryGetAddonMasterIfFocused<AirShipExplorationResult>(atk, out var aser))
                 DrawEntries([aser.RedeployButton, aser.FinalizeReportButton]);
             if (TryGetAddonMasterIfFocused<Bank>(atk, out var b))
@@ -495,6 +499,24 @@ public unsafe class SelectString : IDalamudPlugin
 
             var idx = node;
             ActiveButtons.Add(new(null, () => am.Retainers[idx].Select()));
+            ActiveButtons[node].DrawKey(node, item->AtkResNode);
+        }
+        keyWatcher.Enabled = true;
+    }
+
+    private void DrawEntries(SubmarineExplorationMapSelect sems)
+    {
+        ActiveButtons.Clear();
+
+        var list = sems.Addon->GetComponentListById(7);
+        foreach (var node in Enumerable.Range(0, list->GetItemCount()))
+        {
+            var item = list->GetItemRenderer(node);
+            if (item == null)
+                continue;
+
+            var idx = node;
+            ActiveButtons.Add(new(null, () => sems.Entries[idx].Select()));
             ActiveButtons[node].DrawKey(node, item->AtkResNode);
         }
         keyWatcher.Enabled = true;
